@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ديليشس ميتس | تصفح المنتجات</title>
+  <meta name="description" content="تصفح قطعيات اللحوم والدواجن الفاخرة المجمدة. أسعار مناسبة، توصيل سريع.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥩</text></svg>">
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <main>
+
+    <!-- Page hero -->
+    <section class="page-hero">
+      <div class="container">
+        <div class="breadcrumb">
+          <a href="index.html" data-i18n="navHome">الرئيسية</a>
+          <span class="sep">/</span>
+          <span id="breadcrumb-cat">اللحوم</span>
+        </div>
+        <h1>
+          <span id="cat-icon">🥩</span>
+          <span id="cat-title" data-i18n="catPageTitle">منتجات القسم</span>
+        </h1>
+        <p id="cat-desc" class="muted"></p>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <div class="container">
+      <div class="category-controls">
+        <span class="cat-count">
+          <span data-i18n="showing">يعرض</span>
+          <strong id="visible-count">0</strong>
+          <span data-i18n="of">من</span>
+          <strong id="total-count">0</strong>
+          <span data-i18n="products">منتج</span>
+        </span>
+        <div class="sort-control">
+          <label for="sort-select" data-i18n="sortLabel">ترتيب:</label>
+          <select id="sort-select" class="sort-select">
+            <option value="default" data-i18n="sortDefault">الافتراضي</option>
+            <option value="price-asc"  data-i18n="sortPriceAsc">السعر: من الأقل</option>
+            <option value="price-desc" data-i18n="sortPriceDesc">السعر: من الأعلى</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div id="products-grid" class="products-grid" style="margin-top:1.5rem"></div>
+
+      <!-- Empty state -->
+      <div id="no-products" class="hide" style="text-align:center;padding:4rem 2rem;color:var(--text-muted);">
+        <div style="font-size:3rem;margin-bottom:1rem">📦</div>
+        <p data-i18n="noProducts">لا توجد منتجات في هذا القسم.</p>
+      </div>
+
+      <!-- Load More -->
+      <div class="load-more-wrap" id="load-more-wrap" style="display:none;">
+        <button class="btn btn-outline" id="load-more-btn" data-i18n="loadMore">عرض المزيد</button>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/products-data.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // ── State ──
+    const PAGE_SIZE = 8;
+    let allProducts = [];
+    let displayedCount = 0;
+    let currentSort = 'default';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      injectHeader();
+      injectFooter();
+
+      // Resolve category from URL
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('cat') || 'meats';
+
+      initCategoryPage(cat);
+
+      document.getElementById('sort-select').addEventListener('change', function() {
+        currentSort = this.value;
+        displayedCount = 0;
+        renderProducts();
+      });
+
+      window.addEventListener('langchange', () => {
+        initCategoryPage(cat);
+      });
+    });
+
+    function initCategoryPage(cat) {
+      const lang = i18n.getLang();
+
+      // Category meta
+      const meta = {
+        meats:   { icon: '🥩', titleKey: 'categoryMeatsTitle',   descKey: 'categoryMeatsDesc'   },
+        poultry: { icon: '🍗', titleKey: 'categoryPoultryTitle', descKey: 'categoryPoultryDesc' },
+        other:   { icon: '🔥', titleKey: 'categoryOtherTitle',   descKey: 'categoryOtherDesc'   },
+      };
+      const m = meta[cat] || meta.meats;
+
+      document.getElementById('cat-icon').textContent        = m.icon;
+      document.getElementById('cat-title').textContent       = i18n.t(m.titleKey);
+      document.getElementById('cat-desc').textContent        = i18n.t(m.descKey);
+      document.getElementById('breadcrumb-cat').textContent  = i18n.t(m.titleKey);
+      document.title = `${i18n.t('brandName')} | ${i18n.t(m.titleKey)}`;
+
+      // Re-label sort options
+      document.querySelector('[data-i18n="sortDefault"]').textContent  = i18n.t('sortDefault');
+      document.querySelector('[data-i18n="sortPriceAsc"]').textContent = i18n.t('sortPriceAsc');
+      document.querySelector('[data-i18n="sortPriceDesc"]').textContent= i18n.t('sortPriceDesc');
+
+      allProducts = getProductsByCategory(cat);
+      displayedCount = 0;
+      renderProducts();
+    }
+
+    function getSortedProducts() {
+      const arr = [...allProducts];
+      if (currentSort === 'price-asc')  return arr.sort((a,b) => a.price - b.price);
+      if (currentSort === 'price-desc') return arr.sort((a,b) => b.price - a.price);
+      return arr;
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('products-grid');
+      const sorted = getSortedProducts();
+      const total = sorted.length;
+
+      document.getElementById('total-count').textContent = total;
+
+      if (total === 0) {
+        document.getElementById('no-products').classList.remove('hide');
+        document.getElementById('load-more-wrap').style.display = 'none';
+        document.getElementById('visible-count').textContent = 0;
+        grid.innerHTML = '';
+        return;
+      }
+
+      document.getElementById('no-products').classList.add('hide');
+
+      // If re-rendering (sort changed or lang changed), clear grid first
+      if (displayedCount === 0) grid.innerHTML = '';
+
+      const nextBatch = sorted.slice(displayedCount, displayedCount + PAGE_SIZE);
+      nextBatch.forEach(p => grid.appendChild(buildProductCard(p)));
+      displayedCount += nextBatch.length;
+
+      document.getElementById('visible-count').textContent = displayedCount;
+
+      const hasMore = displayedCount < total;
+      document.getElementById('load-more-wrap').style.display = hasMore ? 'block' : 'none';
+    }
+
+    // Load-more button
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('load-more-btn').addEventListener('click', () => {
+        renderProducts();
+      });
+    });
+  </script>
+</body>
+</html>

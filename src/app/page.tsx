@@ -6,6 +6,7 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import DailyDishSection from "@/components/DailyDishSection";
 import { useLanguage } from "@/context/LanguageContext";
 import { mockProducts } from "@/data/products";
 import { ArrowLeft, ArrowRight, ShieldCheck, Flame, Award } from "lucide-react";
@@ -168,6 +169,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Daily Dish / Dish of the Day Section */}
+        <DailyDishSection />
 
         {/* Categories Section */}
         <section className="py-16 lg:py-24">

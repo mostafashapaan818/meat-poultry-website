@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ديليشس ميتس | سلة التسوق</title>
+  <meta name="description" content="مراجعة وتأكيد سلة التسوق الخاصة بك. تعديل الكميات أو إزالة المنتجات وإتمام الطلب.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="cart-page">
+      <div class="container">
+
+        <!-- Page title -->
+        <h1 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;margin-bottom:2rem;display:flex;align-items:center;gap:.5rem;">
+          <span>🛒</span> <span data-i18n="cartTitle">سلة التسوق</span>
+        </h1>
+
+        <!-- FILLED CART -->
+        <div id="cart-filled" class="hide">
+          <div class="cart-layout">
+
+            <!-- Items column -->
+            <div>
+              <div class="cart-items-header" id="cart-header">
+                <span data-i18n="product">المنتج</span>
+                <span data-i18n="unitPrice">سعر الوحدة</span>
+                <span data-i18n="qty">الكمية</span>
+                <span data-i18n="lineTotal">الإجمالي</span>
+                <span></span>
+              </div>
+              <div id="cart-items-list"></div>
+            </div>
+
+            <!-- Summary sidebar -->
+            <div class="order-summary">
+              <div class="summary-title" data-i18n="orderSummary">ملخص الطلب</div>
+
+              <div class="summary-row">
+                <span class="label" data-i18n="subtotal">المجموع الفرعي</span>
+                <span class="val" id="summary-subtotal">0 ج.م</span>
+              </div>
+              <div class="summary-row">
+                <span class="label" data-i18n="delivery">رسوم التوصيل</span>
+                <span class="val" id="summary-delivery">0 ج.م</span>
+              </div>
+
+              <div id="free-ship-hint" class="free-ship-hint hide"></div>
+
+              <div class="summary-total">
+                <span data-i18n="grandTotal">الإجمالي الكلي</span>
+                <span class="amount" id="summary-total">0 ج.م</span>
+              </div>
+
+              <div class="cod-notice">
+                💵
+                <div>
+                  <strong data-i18n="cashOnly">الدفع نقداً عند الاستلام فقط</strong><br>
+                  <span id="cod-desc">ادفع لمندوب التوصيل عند استلام طلبك.</span>
+                </div>
+              </div>
+
+              <a href="checkout.html" class="btn btn-primary btn-full">
+                <span data-i18n="checkoutBtn">إتمام الطلب الآن</span> →
+              </a>
+
+              <a href="index.html" class="btn btn-ghost btn-full" style="margin-top:.5rem;font-size:.82rem;">
+                ← <span data-i18n="continueShopping">مواصلة التسوق</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- EMPTY CART -->
+        <div id="cart-empty" class="cart-empty hide">
+          <div class="icon">🛒</div>
+          <h3 data-i18n="cartEmpty">سلتك فارغة حالياً!</h3>
+          <p data-i18n="cartEmptyDesc">لم تضف أي منتجات بعد. تصفح تشكيلتنا الفاخرة الآن.</p>
+          <a href="index.html" class="btn btn-primary" data-i18n="browseProducts">تصفح المنتجات</a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/products-data.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      injectHeader('cart');
+      injectFooter();
+      renderCart();
+
+      window.addEventListener('cartchange', renderCart);
+      window.addEventListener('langchange', renderCart);
+    });
+
+    function renderCart() {
+      const lang  = i18n.getLang();
+      const items = Cart.getItems();
+      const filled = document.getElementById('cart-filled');
+      const empty  = document.getElementById('cart-empty');
+
+      if (!items.length) {
+        filled.classList.add('hide');
+        empty.classList.remove('hide');
+        return;
+      }
+
+      filled.classList.remove('hide');
+      empty.classList.add('hide');
+
+      // Build items list
+      const list = document.getElementById('cart-items-list');
+      list.innerHTML = '';
+      items.forEach(item => {
+        const icon = item.category === 'meats' ? '🥩' : item.category === 'poultry' ? '🍗' : '🔥';
+        const name = lang === 'ar' ? item.name_ar : item.name_en;
+        const catLabel = lang === 'ar'
+          ? (item.category === 'meats' ? 'لحوم' : item.category === 'poultry' ? 'دواجن' : 'أخرى')
+          : (item.category === 'meats' ? 'Meats' : item.category === 'poultry' ? 'Poultry' : 'Other');
+
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.dataset.id = item.id;
+        row.innerHTML = `
+          <div class="cart-item-info">
+            <div class="cart-thumb">${icon}</div>
+            <div>
+              <div class="cart-item-name">${name}</div>
+              <div class="cart-item-cat">${catLabel}</div>
+            </div>
+          </div>
+          <div class="unit-price">${item.price.toLocaleString()} <span class="cur">${i18n.t('egp')}</span></div>
+          <div class="qty-stepper">
+            <button class="qty-minus" aria-label="-">−</button>
+            <input type="number" class="qty-input" value="${item.quantity}" min="1" max="99" aria-label="Quantity">
+            <button class="qty-plus" aria-label="+">+</button>
+          </div>
+          <div class="line-total">${(item.price * item.quantity).toLocaleString()} <span class="cur">${i18n.t('egp')}</span></div>
+          <button class="remove-btn" title="${i18n.t('remove')}">🗑</button>`;
+
+        // Qty stepper events
+        const input = row.querySelector('.qty-input');
+        row.querySelector('.qty-minus').addEventListener('click', () => {
+          const v = Math.max(1, parseInt(input.value) - 1);
+          Cart.updateQty(item.id, v);
+        });
+        row.querySelector('.qty-plus').addEventListener('click', () => {
+          const v = parseInt(input.value) + 1;
+          Cart.updateQty(item.id, v);
+        });
+        input.addEventListener('change', () => {
+          const v = Math.max(1, parseInt(input.value) || 1);
+          Cart.updateQty(item.id, v);
+        });
+
+        // Remove
+        row.querySelector('.remove-btn').addEventListener('click', () => {
+          Cart.removeItem(item.id);
+        });
+
+        list.appendChild(row);
+      });
+
+      // Totals
+      const sub    = Cart.getSubtotal();
+      const delFee = Cart.getDeliveryFee();
+      const total  = Cart.getTotal();
+      const egp    = i18n.t('egp');
+
+      document.getElementById('summary-subtotal').innerHTML = `${sub.toLocaleString()} <small>${egp}</small>`;
+      document.getElementById('summary-delivery').innerHTML = delFee === 0
+        ? `<span class="free">${i18n.t('deliveryFree')}</span>`
+        : `${delFee.toLocaleString()} <small>${egp}</small>`;
+      document.getElementById('summary-total').innerHTML = `${total.toLocaleString()} <small>${egp}</small>`;
+
+      // Free shipping hint
+      const hintEl = document.getElementById('free-ship-hint');
+      if (sub < 1500 && sub > 0) {
+        hintEl.classList.remove('hide');
+        hintEl.textContent = i18n.t('freeShipHint', { amount: (1500 - sub).toLocaleString() });
+      } else {
+        hintEl.classList.add('hide');
+      }
+
+      // COD desc
+      document.getElementById('cod-desc').textContent =
+        lang === 'ar'
+          ? 'ادفع لمندوب التوصيل عند استلام طلبك.'
+          : 'Pay the delivery person when your order arrives.';
+    }
+  </script>
+</body>
+</html>

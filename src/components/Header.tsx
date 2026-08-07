@@ -96,15 +96,6 @@ export default function Header() {
               )}
             </Link>
 
-            {/* Admin Portal Button */}
-            <Link
-              href="/admin"
-              className="hidden lg:flex items-center gap-1.5 px-4 py-2 rounded-lg border border-dark-border bg-dark-bg/40 text-xs text-gray-400 hover:text-primary hover:border-primary hover:bg-dark-bg/80 transition-all duration-200"
-            >
-              <ShieldAlert className="h-4 w-4" />
-              <span>{t("adminLink")}</span>
-            </Link>
-
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -142,13 +133,6 @@ export default function Header() {
                 {t(link.labelKey)}
               </Link>
             ))}
-            <Link
-              href="/admin"
-              onClick={() => setIsOpen(false)}
-              className={`block w-full py-3 px-4 rounded-lg text-base font-semibold border-t border-dark-border text-gray-400 hover:text-primary transition-colors`}
-            >
-              {t("adminLink")}
-            </Link>
           </div>
         </div>
       )}

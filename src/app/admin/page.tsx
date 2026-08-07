@@ -6,9 +6,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 import { mockProducts, Product } from "@/data/products";
+import { DailyRecipe, getStoredDailyRecipes, saveStoredDailyRecipes } from "@/data/dailyRecipes";
 import { 
   Lock, User, LogOut, CheckCircle, Package, ListOrdered, 
-  Trash2, Edit, Plus, Phone, MapPin, X, Info, Layers 
+  Trash2, Edit, Plus, Phone, MapPin, X, ChefHat, Sparkles, Clock, Users, BookOpen, UtensilsCrossed
 } from "lucide-react";
 
 interface MockOrder {
@@ -88,9 +89,10 @@ export default function AdminDashboard() {
   const [loginError, setLoginError] = useState("");
 
   // Dashboard states
-  const [activeTab, setActiveTab] = useState<"orders" | "products">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "products" | "recipes">("orders");
   const [orders, setOrders] = useState<MockOrder[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [dailyRecipes, setDailyRecipes] = useState<DailyRecipe[]>([]);
   
   // Modals / Form states
   const [showProductModal, setShowProductModal] = useState(false);
@@ -106,6 +108,23 @@ export default function AdminDashboard() {
   const [prodCategory, setProdCategory] = useState<"meats" | "poultry" | "other">("meats");
   const [prodWeight, setProdWeight] = useState("");
   const [formError, setFormError] = useState("");
+
+  // Recipe Modal State
+  const [showRecipeModal, setShowRecipeModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<DailyRecipe | null>(null);
+  const [recTitleAr, setRecTitleAr] = useState("");
+  const [recTitleEn, setRecTitleEn] = useState("");
+  const [recDescAr, setRecDescAr] = useState("");
+  const [recDescEn, setRecDescEn] = useState("");
+  const [recPrepAr, setRecPrepAr] = useState("");
+  const [recPrepEn, setRecPrepEn] = useState("");
+  const [recServAr, setRecServAr] = useState("");
+  const [recServEn, setRecServEn] = useState("");
+  const [recIngredientsAr, setRecIngredientsAr] = useState("");
+  const [recIngredientsEn, setRecIngredientsEn] = useState("");
+  const [recInstructionsAr, setRecInstructionsAr] = useState("");
+  const [recInstructionsEn, setRecInstructionsEn] = useState("");
+  const [recImage, setRecImage] = useState("");
 
   // Load state on mount
   useEffect(() => {
@@ -140,14 +159,17 @@ export default function AdminDashboard() {
       setProducts(mockProducts);
       localStorage.setItem("delicious_meats_products", JSON.stringify(mockProducts));
     }
+
+    // Load Daily Recipes
+    setDailyRecipes(getStoredDailyRecipes());
   }, []);
 
-  // Handle Login Mock
+  // Handle Login with requested credentials (username: amr elhwary, password: amr9090)
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      (usernameInput.toLowerCase() === "admin" && passwordInput === "admin") ||
-      (usernameInput.toLowerCase() === "staff" && passwordInput === "123456")
+      usernameInput.trim().toLowerCase() === "amr elhwary" &&
+      passwordInput === "amr9090"
     ) {
       setIsLoggedIn(true);
       setLoginError("");
@@ -265,6 +287,58 @@ export default function AdminDashboard() {
     setShowProductModal(false);
   };
 
+  // Open Recipe Edit Modal
+  const openEditRecipeModal = (recipe: DailyRecipe) => {
+    setSelectedRecipe(recipe);
+    setRecTitleAr(recipe.titleAr);
+    setRecTitleEn(recipe.titleEn);
+    setRecDescAr(recipe.descAr);
+    setRecDescEn(recipe.descEn);
+    setRecPrepAr(recipe.prepTimeAr);
+    setRecPrepEn(recipe.prepTimeEn);
+    setRecServAr(recipe.servingsAr);
+    setRecServEn(recipe.servingsEn);
+    setRecIngredientsAr(recipe.ingredientsAr.join("\n"));
+    setRecIngredientsEn(recipe.ingredientsEn.join("\n"));
+    setRecInstructionsAr(recipe.instructionsAr.join("\n"));
+    setRecInstructionsEn(recipe.instructionsEn.join("\n"));
+    setRecImage(recipe.image);
+    setShowRecipeModal(true);
+  };
+
+  // Handle Recipe Submit
+  const handleRecipeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRecipe) return;
+
+    const updatedRecipes = dailyRecipes.map((r) => {
+      if (r.id === selectedRecipe.id) {
+        return {
+          ...r,
+          titleAr: recTitleAr,
+          titleEn: recTitleEn,
+          descAr: recDescAr,
+          descEn: recDescEn,
+          prepTimeAr: recPrepAr,
+          prepTimeEn: recPrepEn,
+          servingsAr: recServAr,
+          servingsEn: recServEn,
+          ingredientsAr: recIngredientsAr.split("\n").map((line) => line.trim()).filter(Boolean),
+          ingredientsEn: recIngredientsEn.split("\n").map((line) => line.trim()).filter(Boolean),
+          instructionsAr: recInstructionsAr.split("\n").map((line) => line.trim()).filter(Boolean),
+          instructionsEn: recInstructionsEn.split("\n").map((line) => line.trim()).filter(Boolean),
+          image: recImage
+        };
+      }
+      return r;
+    });
+
+    setDailyRecipes(updatedRecipes);
+    saveStoredDailyRecipes(updatedRecipes);
+    setShowRecipeModal(false);
+    setSelectedRecipe(null);
+  };
+
   // Render Login Component
   if (!isLoggedIn) {
     return (
@@ -280,7 +354,7 @@ export default function AdminDashboard() {
               <p className="text-xs text-dark-text-muted">{t("adminLoginSub")}</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-5">
               {loginError && (
                 <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-500 font-semibold text-center">
                   {loginError}
@@ -297,7 +371,7 @@ export default function AdminDashboard() {
                   required
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="admin / staff"
+                  placeholder={language === "ar" ? "أدخل اسم المستخدم" : "Enter username"}
                   className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
@@ -312,20 +386,9 @@ export default function AdminDashboard() {
                   required
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="admin / 123456"
+                  placeholder="••••••••"
                   className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                 />
-              </div>
-
-              <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg text-[10px] text-primary/80 space-y-1">
-                <p className="font-bold flex items-center gap-1">
-                  <Info className="h-3.5 w-3.5" />
-                  <span>{language === "ar" ? "بيانات الدخول التجريبية:" : "Demo Login Credentials:"}</span>
-                </p>
-                <ul className="list-disc pl-4 pr-4">
-                  <li>{language === "ar" ? "المدير: admin / كلمة المرور: admin" : "Admin: admin / Password: admin"}</li>
-                  <li>{language === "ar" ? "الموظف: staff / كلمة المرور: 123456" : "Staff: staff / Password: 123456"}</li>
-                </ul>
               </div>
 
               <button
@@ -379,7 +442,7 @@ export default function AdminDashboard() {
 
       {/* Tabs Menu */}
       <div className="bg-dark-surface border-b border-dark-border py-2.5">
-        <div className="max-w-7xl mx-auto px-4 flex gap-4">
+        <div className="max-w-7xl mx-auto px-4 flex flex-wrap gap-3 sm:gap-4">
           <button
             onClick={() => setActiveTab("orders")}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${
@@ -407,6 +470,21 @@ export default function AdminDashboard() {
             <span>{t("productsTab")}</span>
             <span className="ml-1 bg-dark-bg/20 text-[10px] px-1.5 py-0.5 rounded-full font-black">
               {products.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("recipes")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${
+              activeTab === "recipes"
+                ? "bg-primary text-dark-bg shadow"
+                : "text-gray-400 hover:text-white hover:bg-dark-bg/40"
+            }`}
+          >
+            <ChefHat className="h-4.5 w-4.5" />
+            <span>{language === "ar" ? "وصفات طبق اليوم" : "Daily Recipes"}</span>
+            <span className="ml-1 bg-dark-bg/20 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+              {dailyRecipes.length}
             </span>
           </button>
         </div>
@@ -614,19 +692,94 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* RECIPES TAB PANEL */}
+          {activeTab === "recipes" && (
+            <div className="space-y-6">
+              
+              <div className="flex justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-black text-white flex items-center gap-2">
+                    <ChefHat className="h-5 w-5 text-primary" />
+                    <span>{language === "ar" ? "إدارة وصفات طبق اليوم (أيام الأسبوع)" : "Daily Recipes Management"}</span>
+                  </h2>
+                  <p className="text-xs text-dark-text-muted mt-1">
+                    {language === "ar" 
+                      ? "يمكنك تعديل أطباق ومكونات وطريقة تحضير وصور كل يوم من أيام الأسبوع وتحدث مباشرة في الموقع." 
+                      : "Edit dishes, ingredients, instructions, and images for each day of the week."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Recipes Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dailyRecipes.map((recipe) => (
+                  <div
+                    key={recipe.id}
+                    className="bg-dark-surface border border-dark-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Image Preview */}
+                      <div className="h-44 w-full relative bg-dark-bg overflow-hidden">
+                        {/* eslint-disable-next-html-extension/next-image-unoptimized */}
+                        <img
+                          src={recipe.image}
+                          alt={recipe.titleAr}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-3 right-3 bg-dark-bg/85 border border-primary/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-primary">
+                          {language === "ar" ? recipe.dayNameAr : recipe.dayNameEn}
+                        </div>
+                      </div>
+
+                      <div className="p-5 space-y-3">
+                        <h3 className="text-base font-black text-white leading-snug">
+                          {language === "ar" ? recipe.titleAr : recipe.titleEn}
+                        </h3>
+                        <p className="text-xs text-dark-text-muted line-clamp-2">
+                          {language === "ar" ? recipe.descAr : recipe.descEn}
+                        </p>
+                        
+                        <div className="flex items-center gap-3 text-[11px] text-gray-300 font-semibold pt-1">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-primary" />
+                            {language === "ar" ? recipe.prepTimeAr : recipe.prepTimeEn}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3.5 w-3.5 text-primary" />
+                            {language === "ar" ? recipe.servingsAr : recipe.servingsEn}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border-t border-dark-border/50 bg-dark-bg/30 flex justify-end">
+                      <button
+                        onClick={() => openEditRecipeModal(recipe)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-dark-bg font-extrabold text-xs transition-all"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        <span>{language === "ar" ? "تعديل وصفة اليوم" : "Edit Recipe"}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          )}
+
         </div>
       </main>
 
       {/* PRODUCT ADD / EDIT MODAL */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          {/* Overlay backdrop blur */}
           <div
             onClick={() => setShowProductModal(false)}
             className="absolute inset-0 bg-dark-bg/85 backdrop-blur-sm"
           />
 
-          {/* Modal Panel content */}
           <div className="relative bg-dark-surface border border-dark-border w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl p-6 sm:p-8 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowProductModal(false)}
@@ -745,6 +898,203 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
+                  className="py-2.5 px-4 rounded-xl border border-dark-border text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  className="py-2.5 px-5 rounded-xl bg-primary text-dark-bg font-extrabold text-xs hover:bg-primary-hover transition-colors"
+                >
+                  {t("save")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* RECIPE EDIT MODAL */}
+      {showRecipeModal && selectedRecipe && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            onClick={() => setShowRecipeModal(false)}
+            className="absolute inset-0 bg-dark-bg/85 backdrop-blur-sm"
+          />
+
+          <div className="relative bg-dark-surface border border-dark-border w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl p-6 sm:p-8 animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowRecipeModal(false)}
+              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-dark-bg"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h3 className="text-lg font-black text-white mb-6 flex items-center gap-2">
+              <ChefHat className="h-5 w-5 text-primary" />
+              <span>
+                {language === "ar"
+                  ? `تعديل وصفة يوم (${selectedRecipe.dayNameAr})`
+                  : `Edit Recipe (${selectedRecipe.dayNameEn})`}
+              </span>
+            </h3>
+
+            <form onSubmit={handleRecipeSubmit} className="space-y-4 max-h-[75vh] overflow-y-auto pr-2 pl-2">
+              
+              {/* Title AR & EN */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">اسم الطبق (بالعربية)</label>
+                  <input
+                    type="text"
+                    required
+                    value={recTitleAr}
+                    onChange={(e) => setRecTitleAr(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">Dish Name (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={recTitleEn}
+                    onChange={(e) => setRecTitleEn(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* Desc AR & EN */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">الوصف المختصر (بالعربية)</label>
+                  <textarea
+                    rows={2}
+                    value={recDescAr}
+                    onChange={(e) => setRecDescAr(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary resize-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">Short Description (English)</label>
+                  <textarea
+                    rows={2}
+                    value={recDescEn}
+                    onChange={(e) => setRecDescEn(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary resize-none"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* Prep time & Servings */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-300 block">وقت التحضير (عربي)</label>
+                  <input
+                    type="text"
+                    value={recPrepAr}
+                    onChange={(e) => setRecPrepAr(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-300 block">Prep Time (EN)</label>
+                  <input
+                    type="text"
+                    value={recPrepEn}
+                    onChange={(e) => setRecPrepEn(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-300 block">الكمية (عربي)</label>
+                  <input
+                    type="text"
+                    value={recServAr}
+                    onChange={(e) => setRecServAr(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-300 block">Servings (EN)</label>
+                  <input
+                    type="text"
+                    value={recServEn}
+                    onChange={(e) => setRecServEn(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* Image URL */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-300 block">رابط الصورة (Image URL / Path)</label>
+                <input
+                  type="text"
+                  required
+                  value={recImage}
+                  onChange={(e) => setRecImage(e.target.value)}
+                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                  dir="ltr"
+                />
+              </div>
+
+              {/* Ingredients AR & EN */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">المكونات المقترحة (عنصر في كل سطر)</label>
+                  <textarea
+                    rows={4}
+                    value={recIngredientsAr}
+                    onChange={(e) => setRecIngredientsAr(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">Ingredients (One per line)</label>
+                  <textarea
+                    rows={4}
+                    value={recIngredientsEn}
+                    onChange={(e) => setRecIngredientsEn(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* Instructions AR & EN */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">طريقة التحضير (خطوة في كل سطر)</label>
+                  <textarea
+                    rows={4}
+                    value={recInstructionsAr}
+                    onChange={(e) => setRecInstructionsAr(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300 block">Instructions (One step per line)</label>
+                  <textarea
+                    rows={4}
+                    value={recInstructionsEn}
+                    onChange={(e) => setRecInstructionsEn(e.target.value)}
+                    className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* Actions submit */}
+              <div className="pt-4 border-t border-dark-border/40 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRecipeModal(false)}
                   className="py-2.5 px-4 rounded-xl border border-dark-border text-xs font-bold text-gray-400 hover:text-white transition-colors"
                 >
                   {t("cancel")}

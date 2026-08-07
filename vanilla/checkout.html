@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ديليشس ميتس | إتمام الطلب</title>
+  <meta name="description" content="أدخل بيانات الشحن وأكد طلبك من ديليشس ميتس. نقدًا عند الاستلام.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="checkout-page">
+      <div class="container">
+
+        <!-- Page title -->
+        <h1 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;margin-bottom:2rem;display:flex;align-items:center;gap:.5rem;">
+          <span>📝</span> <span data-i18n="checkoutTitle">إتمام الطلب</span>
+        </h1>
+
+        <!-- ── FORM STATE ── -->
+        <div id="checkout-form-state">
+          <div class="checkout-layout">
+
+            <!-- Left: Form -->
+            <div class="checkout-form-card">
+              <h2 data-i18n="checkoutSubtitle">بيانات الشحن والتوصيل</h2>
+
+              <form id="checkout-form" novalidate>
+
+                <div class="form-group">
+                  <label class="form-label" for="f-name">
+                    <span data-i18n="fieldName">اسم العميل</span> <span class="req">*</span>
+                  </label>
+                  <input id="f-name" type="text" class="form-input" data-i18n="fieldNamePH" placeholder="أدخل اسمك الثنائي أو الثلاثي" autocomplete="name">
+                  <div class="form-error" id="err-name"></div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="f-phone">
+                    <span data-i18n="fieldPhone">رقم الهاتف</span> <span class="req">*</span>
+                  </label>
+                  <input id="f-phone" type="tel" class="form-input" data-i18n="fieldPhonePH" placeholder="مثال: 01012345678" dir="ltr" autocomplete="tel">
+                  <div class="form-error" id="err-phone"></div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="f-gov">
+                    <span data-i18n="fieldGov">المحافظة</span> <span class="req">*</span>
+                  </label>
+                  <select id="f-gov" class="form-select">
+                    <option value="" data-i18n="fieldGovPH">اختر المحافظة</option>
+                  </select>
+                  <div class="form-error" id="err-gov"></div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="f-area">
+                    <span data-i18n="fieldArea">المنطقة / الحي</span> <span class="req">*</span>
+                  </label>
+                  <input id="f-area" type="text" class="form-input" data-i18n="fieldAreaPH" placeholder="مثال: المعادي، مصر الجديدة..." autocomplete="address-level2">
+                  <div class="form-error" id="err-area"></div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="f-address">
+                    <span data-i18n="fieldAddress">العنوان بالتفصيل</span> <span class="req">*</span>
+                  </label>
+                  <textarea id="f-address" class="form-textarea" rows="3" data-i18n="fieldAddressPH" placeholder="رقم الشارع، العمارة، الدور، الشقة..." autocomplete="street-address"></textarea>
+                  <div class="form-error" id="err-address"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="submit-btn">
+                  <span id="submit-label" data-i18n="placeOrder">تأكيد وإرسال الطلب</span>
+                </button>
+
+              </form>
+            </div>
+
+            <!-- Right: Order Review -->
+            <div class="checkout-summary">
+              <div class="checkout-summary-header" data-i18n="orderReview">مراجعة طلبك</div>
+              <div class="checkout-item-list" id="checkout-items"></div>
+              <div class="checkout-summary-footer">
+                <div class="summary-row">
+                  <span class="label" data-i18n="subtotal">المجموع الفرعي</span>
+                  <span class="val" id="co-subtotal">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="label" data-i18n="delivery">رسوم التوصيل</span>
+                  <span class="val" id="co-delivery">—</span>
+                </div>
+                <div class="summary-total">
+                  <span data-i18n="grandTotal">الإجمالي</span>
+                  <span class="amount" id="co-total">—</span>
+                </div>
+                <div class="cod-notice" style="margin-top:.75rem">
+                  💵
+                  <div>
+                    <strong data-i18n="cashOnly">الدفع نقداً عند الاستلام فقط</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── SUCCESS STATE ── -->
+        <div id="success-state" class="hide">
+          <div class="success-state">
+            <div class="success-icon">✓</div>
+            <h2 data-i18n="successTitle">تم استلام طلبك بنجاح! 🎉</h2>
+            <p data-i18n="successDesc">شكراً لتسوقك من ديليشس ميتس. سيتواصل معك أحد ممثلينا لتأكيد موعد التوصيل.</p>
+            <div class="success-ref">
+              <div class="label" data-i18n="orderRef">رقم الطلب المرجعي</div>
+              <div class="ref" id="order-ref-display">—</div>
+            </div>
+            <div class="success-ref" style="margin-bottom:0">
+              <div class="label" data-i18n="payMethod">طريقة الدفع</div>
+              <div class="ref" data-i18n="cashOnDelivery">نقداً عند الاستلام</div>
+            </div>
+            <a href="index.html" class="btn btn-primary" style="margin-top:1.5rem">
+              ← <span data-i18n="keepShopping">الاستمرار في التسوق</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/products-data.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      injectHeader();
+      injectFooter();
+
+      // Redirect to home if cart is empty
+      if (!Cart.getItems().length) {
+        showToast(i18n.t('emptyCart'), 'error');
+        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+        return;
+      }
+
+      buildGovernoratesSelect(document.getElementById('f-gov'));
+      renderCheckoutSummary();
+
+      document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
+
+      window.addEventListener('langchange', () => {
+        buildGovernoratesSelect(document.getElementById('f-gov'));
+        renderCheckoutSummary();
+      });
+    });
+
+    function renderCheckoutSummary() {
+      const lang  = i18n.getLang();
+      const items = Cart.getItems();
+      const egp   = i18n.t('egp');
+      const list  = document.getElementById('checkout-items');
+      list.innerHTML = '';
+
+      items.forEach(item => {
+        const icon = item.category === 'meats' ? '🥩' : item.category === 'poultry' ? '🍗' : '🔥';
+        const name = lang === 'ar' ? item.name_ar : item.name_en;
+        const div  = document.createElement('div');
+        div.className = 'checkout-item';
+        div.innerHTML = `
+          <div class="checkout-item-thumb">${icon}</div>
+          <div class="checkout-item-info">
+            <div class="checkout-item-name">${name}</div>
+            <div class="checkout-item-meta">× ${item.quantity}</div>
+          </div>
+          <div class="checkout-item-price">${(item.price * item.quantity).toLocaleString()} ${egp}</div>`;
+        list.appendChild(div);
+      });
+
+      const sub = Cart.getSubtotal();
+      const del = Cart.getDeliveryFee();
+      const tot = Cart.getTotal();
+      document.getElementById('co-subtotal').textContent = `${sub.toLocaleString()} ${egp}`;
+      document.getElementById('co-delivery').innerHTML   = del === 0
+        ? `<span class="free">${i18n.t('deliveryFree')}</span>`
+        : `${del.toLocaleString()} ${egp}`;
+      document.getElementById('co-total').textContent = `${tot.toLocaleString()} ${egp}`;
+    }
+
+    // ── Validation ──
+    function validateField(id, errId, test, errMsg) {
+      const el  = document.getElementById(id);
+      const err = document.getElementById(errId);
+      const val = el.value.trim();
+      const ok  = test(val);
+      el.classList.toggle('error', !ok);
+      err.textContent = ok ? '' : errMsg;
+      err.classList.toggle('visible', !ok);
+      return ok;
+    }
+
+    function validateAll() {
+      const lang = i18n.getLang();
+      const required = i18n.t('required');
+      const invalidPhone = i18n.t('invalidPhone');
+      const EG_PHONE = /^01[0125][0-9]{8}$/;
+
+      let ok = true;
+      ok = validateField('f-name',    'err-name',    v => v.length >= 2, required) && ok;
+      ok = validateField('f-phone',   'err-phone',   v => EG_PHONE.test(v), invalidPhone) && ok;
+      ok = validateField('f-gov',     'err-gov',     v => v !== '', required) && ok;
+      ok = validateField('f-area',    'err-area',    v => v.length >= 2, required) && ok;
+      ok = validateField('f-address', 'err-address', v => v.length >= 5, required) && ok;
+      return ok;
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      if (!validateAll()) return;
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      document.getElementById('submit-label').textContent = i18n.t('placing');
+
+      // Save order to localStorage (for staff dashboard)
+      const items  = Cart.getItems();
+      const lang   = i18n.getLang();
+      const ref    = generateOrderRef();
+      const order  = {
+        id: ref,
+        customer_name:   document.getElementById('f-name').value.trim(),
+        phone:           document.getElementById('f-phone').value.trim(),
+        governorate:     document.getElementById('f-gov').value,
+        area:            document.getElementById('f-area').value.trim(),
+        address_details: document.getElementById('f-address').value.trim(),
+        items: items.map(i => ({
+          product_id: i.id,
+          name_ar: i.name_ar, name_en: i.name_en,
+          quantity: i.quantity, price: i.price
+        })),
+        total: Cart.getTotal(),
+        status: 'new',
+        created_at: new Date().toISOString()
+      };
+
+      // Persist to localStorage orders
+      const existingOrders = JSON.parse(localStorage.getItem('dm_orders') || '[]');
+      existingOrders.unshift(order);
+      localStorage.setItem('dm_orders', JSON.stringify(existingOrders));
+
+      // Simulate a brief "network" delay
+      setTimeout(() => {
+        Cart.clear();
+        document.getElementById('order-ref-display').textContent = ref;
+        document.getElementById('checkout-form-state').classList.add('hide');
+        document.getElementById('success-state').classList.remove('hide');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 1200);
+    }
+  </script>
+</body>
+</html>

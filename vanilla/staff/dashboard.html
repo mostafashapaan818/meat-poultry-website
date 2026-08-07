@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ديليشس ميتس | لوحة التحكم</title>
+  <meta name="description" content="لوحة تحكم الموظفين لإدارة الطلبات والمنتجات.">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠</text></svg>">
+</head>
+<body>
+
+  <!-- ── Dashboard Header ── -->
+  <header class="dashboard-header">
+    <div class="dash-header-inner">
+      <div class="dash-brand">
+        <div class="dash-brand-icon">🛠</div>
+        <div>
+          <div class="dash-brand-name" data-i18n="dashboardTitle">لوحة تحكم الموظفين</div>
+          <div class="dash-brand-sub" data-i18n="brandName">ديليشس ميتس</div>
+        </div>
+      </div>
+      <div class="dash-actions">
+        <button class="lang-btn" onclick="i18n.toggleLang()">
+          🌐 <span data-i18n="langToggle">English</span>
+        </button>
+        <a href="../index.html" class="btn btn-outline btn-sm" data-i18n="previewStore">معاينة المتجر</a>
+        <button class="btn btn-sm" id="logout-btn"
+          style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.25);"
+          data-i18n="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Tabs ── -->
+  <div class="dash-tabs" role="tablist">
+    <button class="dash-tab active" id="tab-orders-btn" role="tab" aria-controls="panel-orders" aria-selected="true" onclick="switchTab('orders')">
+      📋 <span data-i18n="tabOrders">الطلبات</span>
+      <span class="dash-tab-count" id="orders-count">0</span>
+    </button>
+    <button class="dash-tab" id="tab-products-btn" role="tab" aria-controls="panel-products" aria-selected="false" onclick="switchTab('products')">
+      📦 <span data-i18n="tabProducts">المنتجات</span>
+      <span class="dash-tab-count" id="products-count">0</span>
+    </button>
+  </div>
+
+  <!-- ── Orders Panel ── -->
+  <div class="dash-panel active" id="panel-orders">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+      <h2 style="font-size:1rem;font-weight:800;color:var(--text);" data-i18n="ordersTitle">الطلبات الواردة</h2>
+    </div>
+    <div class="orders-grid" id="orders-grid"></div>
+  </div>
+
+  <!-- ── Products Panel ── -->
+  <div class="dash-panel" id="panel-products">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+      <h2 style="font-size:1rem;font-weight:800;color:var(--text);" data-i18n="productsTitle">إدارة المنتجات</h2>
+      <button class="btn btn-primary btn-sm" onclick="openProductModal('add')" data-i18n="addProduct">إضافة منتج</button>
+    </div>
+    <div class="products-table-wrap">
+      <table class="products-table" id="products-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th data-i18n="name">الاسم</th>
+            <th data-i18n="category">القسم</th>
+            <th data-i18n="price">السعر</th>
+            <th data-i18n="actions">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="products-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════ PRODUCT MODAL ════════ -->
+  <div class="modal-backdrop" id="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title" data-i18n="modalAddTitle">إضافة منتج جديد</span>
+        <button class="modal-close" onclick="closeProductModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="product-form">
+          <input type="hidden" id="prod-id">
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="fieldNameAr">الاسم بالعربية</label>
+            <input id="prod-name-ar" type="text" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="fieldNameEn">الاسم بالإنجليزية</label>
+            <input id="prod-name-en" type="text" class="form-input" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="fieldDescAr">الوصف بالعربية</label>
+            <textarea id="prod-desc-ar" class="form-textarea" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="fieldDescEn">الوصف بالإنجليزية</label>
+            <textarea id="prod-desc-en" class="form-textarea" rows="2" dir="ltr"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" data-i18n="fieldPrice">السعر (ج.م)</label>
+              <input id="prod-price" type="number" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="fieldWeight">الوزن / الحجم</label>
+              <input id="prod-weight" type="text" class="form-input" placeholder="1 kg">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="fieldCategory">القسم</label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:.25rem">
+              <button type="button" class="btn btn-outline btn-sm cat-picker active" data-cat="meats">🥩 لحوم</button>
+              <button type="button" class="btn btn-outline btn-sm cat-picker" data-cat="poultry">🍗 دواجن</button>
+              <button type="button" class="btn btn-outline btn-sm cat-picker" data-cat="other">🔥 أخرى</button>
+            </div>
+            <input type="hidden" id="prod-category" value="meats">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeProductModal()" data-i18n="cancelBtn">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveProduct()" data-i18n="saveBtn">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="../js/i18n.js"></script>
+  <script src="../js/products-data.js"></script>
+  <script src="../js/orders-data.js"></script>
+  <script>
+    // ── Auth guard ──
+    if (sessionStorage.getItem('dm_staff_auth') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // ── State ──
+    let orders   = [];
+    let products = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Logout
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        sessionStorage.removeItem('dm_staff_auth');
+        window.location.href = 'login.html';
+      });
+
+      // Category picker in modal
+      document.querySelectorAll('.cat-picker').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-picker').forEach(b => b.classList.remove('active', 'btn-primary'));
+          btn.classList.add('active', 'btn-primary');
+          btn.classList.remove('btn-outline');
+          document.getElementById('prod-category').value = btn.dataset.cat;
+        });
+      });
+
+      loadData();
+      window.addEventListener('langchange', () => {
+        renderOrders();
+        renderProducts();
+      });
+    });
+
+    // ── Load / merge data ──
+    function loadData() {
+      // Orders: merge mock + any from localStorage (checkout submissions)
+      const stored = JSON.parse(localStorage.getItem('dm_orders') || '[]');
+      // Deduplicate by id
+      const merged = [...stored];
+      MOCK_ORDERS.forEach(mo => {
+        if (!merged.find(o => o.id === mo.id)) merged.push(mo);
+      });
+      orders = merged;
+      localStorage.setItem('dm_orders', JSON.stringify(orders));
+
+      // Products: start from static, override with any localStorage edits
+      const storedP = localStorage.getItem('dm_products');
+      products = storedP ? JSON.parse(storedP) : [...PRODUCTS];
+
+      renderOrders();
+      renderProducts();
+      document.getElementById('orders-count').textContent  = orders.length;
+      document.getElementById('products-count').textContent = products.length;
+    }
+
+    // ── Tab switch ──
+    function switchTab(tab) {
+      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`tab-${tab}-btn`).classList.add('active');
+      document.getElementById(`panel-${tab}`).classList.add('active');
+    }
+
+    // ── Status label ──
+    function statusLabel(status) {
+      const lang = i18n.getLang();
+      const labels = {
+        ar: { new:'جديد', preparing:'قيد التجهيز', delivering:'في الطريق', delivered:'تم التسليم', cancelled:'ملغي' },
+        en: { new:'New',  preparing:'Preparing',    delivering:'Out for Delivery', delivered:'Delivered', cancelled:'Cancelled' }
+      };
+      return (labels[lang] || labels.ar)[status] || status;
+    }
+
+    // ── Render Orders ──
+    function renderOrders() {
+      const lang = i18n.getLang();
+      const grid = document.getElementById('orders-grid');
+      grid.innerHTML = '';
+
+      if (!orders.length) {
+        grid.innerHTML = `<p style="color:var(--text-muted);padding:2rem 0">—</p>`;
+        return;
+      }
+
+      orders.forEach((order, idx) => {
+        const dateStr = new Date(order.created_at || Date.now())
+          .toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-US', { hour:'2-digit', minute:'2-digit' });
+
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.innerHTML = `
+          <div class="order-card-header">
+            <div>
+              <div class="order-id">${i18n.t('orderId')} ${order.id}</div>
+              <div class="order-date">${dateStr}</div>
+            </div>
+            <span class="status-badge status-${order.status}">${statusLabel(order.status)}</span>
+          </div>
+          <div class="order-card-body">
+            <div class="order-customer">
+              <div>
+                <div class="order-customer-name">${order.customer_name}</div>
+                <a class="order-customer-meta" href="tel:${order.phone}">📞 ${order.phone}</a>
+              </div>
+            </div>
+            <div class="order-address">
+              📍 ${order.governorate}، ${order.area}، ${order.address_details}
+            </div>
+            <div class="order-items-mini">
+              ${order.items.map(item =>
+                `<div>
+                  <span>${lang === 'ar' ? item.name_ar : item.name_en} × ${item.quantity}</span>
+                  <span>${(item.price * item.quantity).toLocaleString()} ${i18n.t('egp')}</span>
+                </div>`
+              ).join('')}
+            </div>
+          </div>
+          <div class="order-card-footer">
+            <div>
+              <span class="order-total-label" data-i18n="total">${i18n.t('total')}</span>
+              <span class="order-total">${order.total.toLocaleString()} ${i18n.t('egp')}</span>
+            </div>
+            <select class="status-select" data-idx="${idx}">
+              ${['new','preparing','delivering','delivered','cancelled'].map(s =>
+                `<option value="${s}" ${order.status === s ? 'selected' : ''}>${statusLabel(s)}</option>`
+              ).join('')}
+            </select>
+          </div>`;
+
+        // Status change handler
+        card.querySelector('.status-select').addEventListener('change', function() {
+          const i = parseInt(this.dataset.idx);
+          orders[i].status = this.value;
+          localStorage.setItem('dm_orders', JSON.stringify(orders));
+          // Update badge without full re-render
+          card.querySelector('.status-badge').className = `status-badge status-${this.value}`;
+          card.querySelector('.status-badge').textContent = statusLabel(this.value);
+          showToast(`${i18n.t('orderId')} ${orders[i].id} — ${statusLabel(this.value)}`, 'success');
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ── Render Products ──
+    function renderProducts() {
+      const lang  = i18n.getLang();
+      const tbody = document.getElementById('products-tbody');
+      tbody.innerHTML = '';
+      document.getElementById('products-count').textContent = products.length;
+
+      products.forEach((p, idx) => {
+        const icon = p.category === 'meats' ? '🥩' : p.category === 'poultry' ? '🍗' : '🔥';
+        const name = lang === 'ar' ? p.name_ar : p.name_en;
+        const catLabel = lang === 'ar'
+          ? (p.category === 'meats' ? 'لحوم' : p.category === 'poultry' ? 'دواجن' : 'أخرى')
+          : (p.category === 'meats' ? 'Meats' : p.category === 'poultry' ? 'Poultry' : 'Other');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><div class="prod-thumb-cell">${icon}</div></td>
+          <td>
+            <strong>${name}</strong>
+            <div style="font-size:.72rem;color:var(--text-dim);margin-top:.1rem">${p.weight}</div>
+          </td>
+          <td><span class="status-badge status-new" style="font-size:.68rem">${catLabel}</span></td>
+          <td><strong style="color:var(--gold)">${p.price.toLocaleString()} ${i18n.t('egp')}</strong></td>
+          <td>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="openProductModal('edit', ${idx})" data-i18n="editProduct">${i18n.t('editProduct')}</button>
+              <button class="btn btn-danger btn-sm"  onclick="deleteProduct(${idx})" data-i18n="deleteProduct">${i18n.t('deleteProduct')}</button>
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ── Product Modal ──
+    function openProductModal(mode, idx) {
+      const modal = document.getElementById('product-modal');
+      const title = document.getElementById('modal-title');
+
+      if (mode === 'add') {
+        title.textContent = i18n.t('modalAddTitle');
+        document.getElementById('prod-id').value       = '';
+        document.getElementById('prod-name-ar').value  = '';
+        document.getElementById('prod-name-en').value  = '';
+        document.getElementById('prod-desc-ar').value  = '';
+        document.getElementById('prod-desc-en').value  = '';
+        document.getElementById('prod-price').value    = '';
+        document.getElementById('prod-weight').value   = '1 kg';
+        document.getElementById('prod-category').value = 'meats';
+        // Reset picker
+        document.querySelectorAll('.cat-picker').forEach(b => {
+          b.classList.remove('active','btn-primary');
+          b.classList.add('btn-outline');
+        });
+        document.querySelector('.cat-picker[data-cat="meats"]').classList.add('active','btn-primary');
+        document.querySelector('.cat-picker[data-cat="meats"]').classList.remove('btn-outline');
+      } else {
+        const p = products[idx];
+        title.textContent = i18n.t('modalEditTitle');
+        document.getElementById('prod-id').value       = idx;
+        document.getElementById('prod-name-ar').value  = p.name_ar;
+        document.getElementById('prod-name-en').value  = p.name_en;
+        document.getElementById('prod-desc-ar').value  = p.desc_ar;
+        document.getElementById('prod-desc-en').value  = p.desc_en;
+        document.getElementById('prod-price').value    = p.price;
+        document.getElementById('prod-weight').value   = p.weight;
+        document.getElementById('prod-category').value = p.category;
+        // Sync picker
+        document.querySelectorAll('.cat-picker').forEach(b => {
+          const active = b.dataset.cat === p.category;
+          b.classList.toggle('active', active);
+          b.classList.toggle('btn-primary', active);
+          b.classList.toggle('btn-outline', !active);
+        });
+      }
+      modal.classList.add('open');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.remove('open');
+    }
+
+    function saveProduct() {
+      const idxRaw  = document.getElementById('prod-id').value;
+      const nameAr  = document.getElementById('prod-name-ar').value.trim();
+      const nameEn  = document.getElementById('prod-name-en').value.trim();
+      const descAr  = document.getElementById('prod-desc-ar').value.trim();
+      const descEn  = document.getElementById('prod-desc-en').value.trim();
+      const price   = parseFloat(document.getElementById('prod-price').value);
+      const weight  = document.getElementById('prod-weight').value.trim() || '1 kg';
+      const cat     = document.getElementById('prod-category').value;
+
+      if (!nameAr || !nameEn || isNaN(price) || price <= 0) {
+        showToast(i18n.t('required'), 'error');
+        return;
+      }
+
+      const prod = {
+        id: `custom-${Date.now()}`,
+        name_ar: nameAr, name_en: nameEn,
+        desc_ar: descAr, desc_en: descEn,
+        price, weight, category: cat,
+        image: 'images/other.svg', is_bestseller: false
+      };
+
+      if (idxRaw === '') {
+        products.unshift(prod);
+        showToast(i18n.t('addProduct') + ' ✓', 'success');
+      } else {
+        products[parseInt(idxRaw)] = { ...products[parseInt(idxRaw)], ...prod };
+        showToast(i18n.t('editProduct') + ' ✓', 'success');
+      }
+
+      localStorage.setItem('dm_products', JSON.stringify(products));
+      closeProductModal();
+      renderProducts();
+    }
+
+    function deleteProduct(idx) {
+      if (!confirm(i18n.t('confirmDelete'))) return;
+      products.splice(idx, 1);
+      localStorage.setItem('dm_products', JSON.stringify(products));
+      renderProducts();
+      showToast(i18n.t('deleteProduct') + ' ✓', 'success');
+    }
+
+    // ── Toast (inline for staff pages, no main.js loaded) ──
+    function showToast(message, type = 'default', duration = 3000) {
+      let container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+      toast.innerHTML = `<span>${icon}</span> ${message}`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0'; toast.style.transition = 'opacity .3s';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // Modal close on backdrop click
+    document.getElementById('product-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeProductModal();
+    });
+  </script>
+</body>
+</html>

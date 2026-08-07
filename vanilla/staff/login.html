@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ديليشس ميتس | بوابة الموظفين</title>
+  <meta name="description" content="تسجيل دخول الموظفين لإدارة الطلبات والمنتجات.">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+</head>
+<body class="auth-page">
+
+  <div class="auth-container">
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        <div class="auth-icon">🛠</div>
+        <h1 data-i18n="staffLoginTitle">بوابة الموظفين</h1>
+        <p data-i18n="staffLoginSubtitle">تسجيل الدخول لإدارة الطلبات والمنتجات</p>
+      </div>
+
+      <div id="login-alert" class="auth-alert" role="alert"></div>
+
+      <form id="login-form" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="f-user" data-i18n="username">اسم المستخدم</label>
+          <input id="f-user" type="text" class="form-input" placeholder="اسم المستخدم" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-pass" data-i18n="password">كلمة المرور</label>
+          <input id="f-pass" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+          <span data-i18n="loginBtn">تسجيل الدخول</span>
+        </button>
+
+      </form>
+
+      <!-- Language toggle -->
+      <div style="margin-top:1.25rem;text-align:center;">
+        <button class="lang-btn" onclick="i18n.toggleLang()" style="display:inline-flex">
+          🌐 <span data-i18n="langToggle">English</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts (paths relative to /staff/) -->
+  <script src="../js/i18n.js"></script>
+  <script>
+    // CREDENTIALS
+    const VALID_CREDENTIALS = [
+      { user: 'amr elhwary', pass: 'amr9090' }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Already logged in? Redirect immediately.
+      if (sessionStorage.getItem('dm_staff_auth') === 'true') {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      document.getElementById('login-form').addEventListener('submit', handleLogin);
+    });
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('f-user').value.trim();
+      const pass = document.getElementById('f-pass').value;
+      const alert = document.getElementById('login-alert');
+      const btn  = document.getElementById('login-btn');
+
+      const valid = VALID_CREDENTIALS.some(c => c.user === user && c.pass === pass);
+
+      if (valid) {
+        sessionStorage.setItem('dm_staff_auth', 'true');
+        btn.textContent = '...';
+        btn.disabled = true;
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+      } else {
+        alert.textContent = i18n.t('loginError');
+        alert.classList.add('error');
+        // Shake animation on card
+        document.querySelector('.auth-card').animate(
+          [{ transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],
+          { duration: 300 }
+        );
+      }
+    }
+  </script>
+</body>
+</html>
