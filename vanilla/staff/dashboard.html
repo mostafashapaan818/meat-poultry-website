@@ -164,23 +164,57 @@
       });
 
       loadData();
+      setInterval(fetchLiveOrders, 3000);
+
       window.addEventListener('langchange', () => {
         renderOrders();
         renderProducts();
       });
     });
 
+    async function fetchLiveOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.orders)) {
+            const apiOrders = data.orders.map(o => ({
+              id: o.id,
+              customer_name: o.customerName || o.customer_name || 'عميل بدون اسم',
+              phone: o.phone || '',
+              governorate: o.governorate || '',
+              area: o.area || '',
+              address_details: o.address || o.address_details || '',
+              items: Array.isArray(o.items) ? o.items.map(i => ({
+                product_id: i.id || i.product_id,
+                name_ar: i.nameAr || i.name_ar || i.name || 'منتج',
+                name_en: i.nameEn || i.name_en || i.name || 'Product',
+                quantity: i.quantity || 1,
+                price: i.price || 0
+              })) : [],
+              total: o.totalValue || o.total || 0,
+              status: o.status || 'new',
+              created_at: o.createdAt || o.created_at || new Date().toISOString()
+            }));
+
+            orders = apiOrders;
+            localStorage.setItem('dm_orders', JSON.stringify(orders));
+            localStorage.setItem('delicious_meats_orders', JSON.stringify(orders));
+            renderOrders();
+            document.getElementById('orders-count').textContent = orders.length;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching live orders:', err);
+      }
+    }
+
     // ── Load / merge data ──
     function loadData() {
-      // Orders: merge mock + any from localStorage (checkout submissions)
+      // Orders: merge mock + any from localStorage
       const stored = JSON.parse(localStorage.getItem('dm_orders') || '[]');
-      // Deduplicate by id
-      const merged = [...stored];
-      MOCK_ORDERS.forEach(mo => {
-        if (!merged.find(o => o.id === mo.id)) merged.push(mo);
-      });
-      orders = merged;
-      localStorage.setItem('dm_orders', JSON.stringify(orders));
+      orders = stored.length ? stored : MOCK_ORDERS;
+      fetchLiveOrders();
 
       // Products: start from static, override with any localStorage edits
       const storedP = localStorage.getItem('dm_products');

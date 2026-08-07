@@ -254,6 +254,16 @@
       const existingOrders = JSON.parse(localStorage.getItem('dm_orders') || '[]');
       existingOrders.unshift(order);
       localStorage.setItem('dm_orders', JSON.stringify(existingOrders));
+      localStorage.setItem('delicious_meats_orders', JSON.stringify(existingOrders));
+
+      // Post order to central API route
+      try {
+        fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(order)
+        }).catch(err => console.error(err));
+      } catch (e) {}
 
       // Simulate a brief "network" delay
       setTimeout(() => {

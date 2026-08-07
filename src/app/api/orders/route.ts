@@ -21,7 +21,7 @@ export interface MockOrder {
 
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff8081819f7e10ae019fdcc308d70b77";
 
-// In-memory cache for ultra-fast instant response
+// Reliable default dataset
 let memoryCache: MockOrder[] = [
   {
     id: "DM-384910",
@@ -42,16 +42,36 @@ let memoryCache: MockOrder[] = [
 
 let lastFetchTime = 0;
 
+function normalizeOrder(item: any): MockOrder {
+  return {
+    id: item.id || `DM-${Math.floor(100000 + Math.random() * 900000)}`,
+    customerName: item.customerName || item.customer_name || "عميل بدون اسم",
+    phone: item.phone || "",
+    governorate: item.governorate || "Cairo",
+    area: item.area || "",
+    address: item.address || item.address_details || "",
+    items: Array.isArray(item.items) ? item.items.map((i: any) => ({
+      id: i.id || i.product_id || "item",
+      nameAr: i.nameAr || i.name_ar || i.name || "منتج",
+      nameEn: i.nameEn || i.name_en || i.name || "Product",
+      price: Number(i.price || 0),
+      quantity: Number(i.quantity || 1)
+    })) : [],
+    totalValue: Number(item.totalValue || item.total || 0),
+    status: item.status || "new",
+    createdAt: item.createdAt || item.created_at || new Date().toISOString()
+  };
+}
+
 async function fetchCloudOrdersFast(): Promise<MockOrder[]> {
   const now = Date.now();
-  // Use memory cache if updated within last 3 seconds
   if (now - lastFetchTime < 3000 && memoryCache.length > 0) {
     return memoryCache;
   }
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout max
+    const timeoutId = setTimeout(() => controller.abort(), 1800);
 
     const res = await fetch(CLOUD_DB_URL, {
       cache: "no-store",
@@ -62,13 +82,13 @@ async function fetchCloudOrdersFast(): Promise<MockOrder[]> {
     if (res.ok) {
       const json = await res.json();
       if (json && json.data && Array.isArray(json.data.orders) && json.data.orders.length > 0) {
-        memoryCache = json.data.orders;
+        memoryCache = json.data.orders.map(normalizeOrder);
         lastFetchTime = now;
         return memoryCache;
       }
     }
   } catch (e) {
-    // Return memory cache if timeout or error occurs
+    // Return cached orders on network delay
   }
   return memoryCache;
 }
@@ -106,28 +126,15 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    if (!body || !body.customerName || !body.phone) {
+    if (!body) {
       return NextResponse.json({ error: "Invalid order data" }, { status: 400 });
     }
 
+    const newOrder = normalizeOrder(body);
     const currentOrders = await fetchCloudOrdersFast();
-    const newOrder: MockOrder = {
-      id: body.id || `DM-${Math.floor(100000 + Math.random() * 900000)}`,
-      customerName: body.customerName,
-      phone: body.phone,
-      governorate: body.governorate || "Cairo",
-      area: body.area || "",
-      address: body.address || "",
-      items: body.items || [],
-      totalValue: body.totalValue || 0,
-      status: "new",
-      createdAt: body.createdAt || new Date().toISOString(),
-    };
-
     const filtered = currentOrders.filter((o) => o.id !== newOrder.id);
     const updated = [newOrder, ...filtered];
     
-    // Save to memory cache immediately and update cloud DB in background
     saveCloudOrdersBackground(updated);
 
     return NextResponse.json({ success: true, order: newOrder, orders: updated });

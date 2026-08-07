@@ -187,6 +187,7 @@ export default function AdminDashboard() {
       setIsLoggedIn(true);
       setLoginError("");
       localStorage.setItem("delicious_meats_admin_auth", "true");
+      fetchLiveOrders();
     } else {
       setLoginError(t("loginError"));
     }
@@ -523,6 +524,28 @@ export default function AdminDashboard() {
           {activeTab === "orders" && (
             <div className="space-y-6">
               
+              {/* Header Refresh Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-dark-surface p-4 sm:p-5 rounded-2xl border border-dark-border shadow-lg">
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                    <span>📋</span>
+                    <span>{t("ordersTab")} ({orders.length})</span>
+                  </h2>
+                  <p className="text-xs text-dark-text-muted mt-0.5">
+                    {language === "ar"
+                      ? "تصل الطلبات من الهواتف أونلاين وتتحدث تلقائياً كل بضع ثوانٍ"
+                      : "Orders sync automatically from mobile devices in real time"}
+                  </p>
+                </div>
+                <button
+                  onClick={fetchLiveOrders}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-dark-bg font-extrabold text-xs hover:bg-primary-hover active:scale-95 transition-all shadow-md shadow-primary/20"
+                >
+                  <span className="text-sm">🔄</span>
+                  <span>{language === "ar" ? "تحديث الطلبات الآن" : "Refresh Orders"}</span>
+                </button>
+              </div>
+
               {/* Responsive Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {orders.map((order) => {
