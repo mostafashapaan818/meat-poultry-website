@@ -89,46 +89,57 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    // Mock backend delay
-    setTimeout(() => {
-      // Generate randomized order reference
-      const randRef = `DM-${Math.floor(100000 + Math.random() * 900000)}`;
-      setOrderRef(randRef);
+    const randRef = `DM-${Math.floor(100000 + Math.random() * 900000)}`;
+    setOrderRef(randRef);
 
-      // Save order details to localstorage for staff panel demonstration
+    const newOrder = {
+      id: randRef,
+      customerName: name,
+      phone,
+      governorate,
+      area,
+      address,
+      items: cart.map(item => ({
+        id: item.product.id,
+        nameAr: item.product.nameAr,
+        nameEn: item.product.nameEn,
+        price: item.product.price,
+        quantity: item.quantity
+      })),
+      totalValue: total,
+      status: "new",
+      createdAt: new Date().toISOString()
+    };
+
+    // Save order details to localstorage
+    try {
       const savedOrders = JSON.parse(localStorage.getItem("delicious_meats_orders") || "[]");
-      const newOrder = {
-        id: randRef,
-        customerName: name,
-        phone,
-        governorate,
-        area,
-        address,
-        items: cart.map(item => ({
-          id: item.product.id,
-          nameAr: item.product.nameAr,
-          nameEn: item.product.nameEn,
-          price: item.product.price,
-          quantity: item.quantity
-        })),
-        totalValue: total,
-        status: "new",
-        createdAt: new Date().toISOString()
-      };
-      
       savedOrders.unshift(newOrder);
       localStorage.setItem("delicious_meats_orders", JSON.stringify(savedOrders));
+    } catch (err) {
+      console.error(err);
+    }
 
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      clearCart();
-    }, 1500);
+    // Send order to central backend API so it syncs across all devices and staff portal
+    try {
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOrder)
+      });
+    } catch (err) {
+      console.error("API send order error:", err);
+    }
+
+    setIsSubmitting(false);
+    setIsSuccess(true);
+    clearCart();
   };
 
   if (isSuccess) {

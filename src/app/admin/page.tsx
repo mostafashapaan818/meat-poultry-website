@@ -126,7 +126,25 @@ export default function AdminDashboard() {
   const [recInstructionsEn, setRecInstructionsEn] = useState("");
   const [recImage, setRecImage] = useState("");
 
-  // Load state on mount
+  // Fetch live orders from central server API so orders from phones appear in real time
+  const fetchLiveOrders = async () => {
+    try {
+      const res = await fetch("/api/orders");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.orders && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+          try {
+            localStorage.setItem("delicious_meats_orders", JSON.stringify(data.orders));
+          } catch (e) {}
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching live orders:", err);
+    }
+  };
+
+  // Load state on mount and start 5-second live polling
   useEffect(() => {
     // Auth Check
     const authStatus = localStorage.getItem("delicious_meats_admin_auth");
@@ -134,18 +152,11 @@ export default function AdminDashboard() {
       setIsLoggedIn(true);
     }
 
-    // Load Orders
-    const storedOrders = localStorage.getItem("delicious_meats_orders");
-    if (storedOrders) {
-      try {
-        setOrders(JSON.parse(storedOrders));
-      } catch (e) {
-        setOrders(INITIAL_ORDERS);
-      }
-    } else {
-      setOrders(INITIAL_ORDERS);
-      localStorage.setItem("delicious_meats_orders", JSON.stringify(INITIAL_ORDERS));
-    }
+    // Load Orders from server
+    fetchLiveOrders();
+
+    // Auto-poll live orders every 5 seconds for orders placed on phones
+    const orderInterval = setInterval(fetchLiveOrders, 5000);
 
     // Load Products
     const storedProducts = localStorage.getItem("delicious_meats_products");
@@ -162,6 +173,8 @@ export default function AdminDashboard() {
 
     // Load Daily Recipes
     setDailyRecipes(getStoredDailyRecipes());
+
+    return () => clearInterval(orderInterval);
   }, []);
 
   // Handle Login with requested credentials (username: amr elhwary, password: amr9090)
@@ -185,8 +198,8 @@ export default function AdminDashboard() {
     localStorage.removeItem("delicious_meats_admin_auth");
   };
 
-  // Update order status
-  const handleUpdateOrderStatus = (orderId: string, newStatus: MockOrder["status"]) => {
+  // Update order status on server and local state
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: MockOrder["status"]) => {
     const updated = orders.map((order) => {
       if (order.id === orderId) {
         return { ...order, status: newStatus };
@@ -194,7 +207,19 @@ export default function AdminDashboard() {
       return order;
     });
     setOrders(updated);
-    localStorage.setItem("delicious_meats_orders", JSON.stringify(updated));
+    try {
+      localStorage.setItem("delicious_meats_orders", JSON.stringify(updated));
+    } catch (e) {}
+
+    try {
+      await fetch("/api/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, status: newStatus })
+      });
+    } catch (err) {
+      console.error("API update order status error:", err);
+    }
   };
 
   // Delete product
