@@ -53,22 +53,20 @@ export default function Home() {
         
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-8 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-32 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.12),transparent_70%)]">
-          {/* Fixed Parallax Background Watermark */}
-          <div className="absolute inset-0 pointer-events-none select-none z-0">
-            <div 
-              className="sticky top-20 sm:top-24 left-1/2 -translate-x-1/2 w-[220px] h-[220px] sm:w-[440px] sm:h-[440px] lg:w-[540px] lg:h-[540px] mx-auto mix-blend-screen opacity-15 sm:opacity-25"
-              style={{
-                maskImage: "radial-gradient(circle at center, black 35%, transparent 75%)",
-                WebkitMaskImage: "radial-gradient(circle at center, black 35%, transparent 75%)"
-              }}
-            >
-              {/* eslint-disable-next-html-extension/next-image-unoptimized */}
-              <img
-                src="/images/logo.png"
-                alt=""
-                className="w-full h-full object-contain filter brightness-110"
-              />
-            </div>
+          {/* Fixed Parallax Background Watermark (Full Mobile iOS Safari Support) */}
+          <div 
+            className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 w-[200px] h-[200px] sm:w-[420px] sm:h-[420px] lg:w-[540px] lg:h-[540px] pointer-events-none select-none z-0 mix-blend-screen opacity-15 sm:opacity-20"
+            style={{
+              maskImage: "radial-gradient(circle at center, black 35%, transparent 75%)",
+              WebkitMaskImage: "radial-gradient(circle at center, black 35%, transparent 75%)"
+            }}
+          >
+            {/* eslint-disable-next-html-extension/next-image-unoptimized */}
+            <img
+              src="/images/logo.png"
+              alt=""
+              className="w-full h-full object-contain filter brightness-110"
+            />
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
