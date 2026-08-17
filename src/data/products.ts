@@ -7,332 +7,386 @@ export interface Product {
   price: number;
   category: "meats" | "poultry" | "other";
   isBestSeller?: boolean;
-  image: string; // Specific image file path
-  weight?: string; // e.g. "1 kg" or "500g"
+  image: string;
+  weight?: string;
 }
 
 export const mockProducts: Product[] = [
-  // MEATS (لحوم)
+  // ---------------------------------------------------------
+  // MEATS (اللحوم الفاخرة - القائمة الرسمية المعتمدة)
+  // ---------------------------------------------------------
   {
-    id: "m1",
-    nameAr: "لحم موزة بقري فاخر",
-    nameEn: "Premium Beef Shank (Moza)",
-    descAr: "لحم موزة بقري غني بالجيلاتين والنكهة، مثالي للطواجن والطهي البطيء.",
-    descEn: "Gelatinous and flavorful beef shank cut, perfect for tagines and slow cooking.",
-    price: 420,
-    category: "meats",
-    isBestSeller: true,
-    image: "/images/beef_shank.png",
-    weight: "1 kg"
-  },
-  {
-    id: "m2",
-    nameAr: "عرق ريبستو بقري",
-    nameEn: "Beef Ribeye Roast (Ribesto)",
-    descAr: "عرق ريبستو كامل مناسب جداً للتحمير في الفرن وإعداد اللحم البارد.",
-    descEn: "Whole ribeye roast, perfect for oven roasting and preparing cold cuts.",
-    price: 490,
-    category: "meats",
-    isBestSeller: true,
-    image: "/images/beef_roast.png",
-    weight: "1.5 kg"
-  },
-  {
-    id: "m3",
-    nameAr: "عرق فلتو بقري (تندرلوين)",
-    nameEn: "Beef Tenderloin Filet (Fletto)",
-    descAr: "أنعم قطعة في العجل، خالية من الدهون ومثالية للشواء والستيك الفاخر.",
-    descEn: "The tenderest beef cut, fat-free and perfect for grilling and premium steaks.",
+    id: "m_moza",
+    nameAr: "لحم موزة",
+    nameEn: "Beef Shank (Moza)",
+    descAr: "قطعية موزة بقري طازجة غنية بالجيلاتين والنكهة، مثالية للطواجن والطهي البطيء.",
+    descEn: "Fresh gelatinous beef shank cut, rich in flavor, perfect for tagines and slow cooking.",
     price: 550,
     category: "meats",
     isBestSeller: true,
-    image: "/images/beef_tenderloin.png",
-    weight: "1 kg"
+    image: "/images/beef_shank.png",
+    weight: "1 كجم"
   },
   {
-    id: "m4",
-    nameAr: "كتف ضاني بلدي",
+    id: "m_roasto",
+    nameAr: "لحم عرق روستو",
+    nameEn: "Beef Ribeye Roast (Roasto)",
+    descAr: "عرق روستو كامل ملفوف بعناية، مناسب جداً للتحمير بالفرن وإعداد اللحم البارد.",
+    descEn: "Whole tied ribeye roast, ideal for oven roasting and delicious cold cuts.",
+    price: 900,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/beef_roast.png",
+    weight: "1.5 كجم"
+  },
+  {
+    id: "m_fletto",
+    nameAr: "لحم عرق فلتو",
+    nameEn: "Beef Tenderloin (Fletto)",
+    descAr: "أنعم وأطرى قطعة لحم بقري خالية تماماً من الدهون، مثالية للستيك الفاخر والشواء.",
+    descEn: "The tenderest fat-free beef cut, perfect for premium steaks and gourmet grilling.",
+    price: 1300,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/beef_tenderloin.png",
+    weight: "2 كجم"
+  },
+  {
+    id: "m_kataf_dani",
+    nameAr: "كتف ضاني",
     nameEn: "Local Lamb Shoulder",
-    descAr: "كتف ضاني بالعظم ذو نكهة غنية وملمس طري ومثالي للشواء بالفرن مع الأرز.",
-    descEn: "Bone-in lamb shoulder, rich in flavor and tender, perfect for oven roasting with rice.",
-    price: 460,
+    descAr: "كتف ضاني بلدي طازج بالعظم، نكهة غنية وملمس طري للشواء في الفرن مع الأرز.",
+    descEn: "Fresh bone-in lamb shoulder, rich in flavor and tender, perfect for slow roasting.",
+    price: 1750,
     category: "meats",
     image: "/images/lamb_shoulder.png",
-    weight: "1.2 kg"
+    weight: "3 كجم"
   },
   {
-    id: "m5",
-    nameAr: "ريش ضاني فاخرة",
-    nameEn: "Premium Lamb Chops (Riyash)",
-    descAr: "قطع ريش ضاني طرية مجهزة للشواء السريع على الفحم أو الجريل.",
-    descEn: "Tender lamb chops prepared for quick grilling on charcoal or griddle.",
-    price: 480,
+    id: "m_fakhda_dani",
+    nameAr: "فخدة ضاني",
+    nameEn: "Lamb Leg (Fakhda)",
+    descAr: "فخدة ضاني بلدي فاخرة بالعظم، اختيارك المثالي للعزومات والمناسبات الكبرى.",
+    descEn: "Premium whole leg of local lamb, perfect for family feasts and roast banquets.",
+    price: 1100,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/lamb_shoulder.png",
+    weight: "2 كجم"
+  },
+  {
+    id: "m_riyash_dani",
+    nameAr: "لحم ريش ضاني",
+    nameEn: "Lamb Chops (Riyash)",
+    descAr: "قطع ريش ضاني طازجة ومجهزة للشواء السريع على الفحم أو الجريل.",
+    descEn: "Tender local lamb chops prepared for quick grilling on charcoal or griddle.",
+    price: 675,
     category: "meats",
     isBestSeller: true,
     image: "/images/lamb_chops.png",
-    weight: "1 kg"
+    weight: "1 كجم"
   },
   {
-    id: "m6",
-    nameAr: "كبدة بقري طازجة",
-    nameEn: "Fresh Beef Liver",
-    descAr: "كبدة بقري مقطعة شرائح أو مكعبات حسب الطلب، غنية بالحديد وجاهزة للطهي السريع.",
-    descEn: "Sliced or cubed beef liver, rich in iron and ready for quick pan-frying.",
-    price: 380,
-    category: "meats",
-    image: "/images/beef_tenderloin.png",
-    weight: "1 kg"
-  },
-  {
-    id: "m7",
-    nameAr: "ستيك ريب آي بقري",
-    nameEn: "Beef Ribeye Steak",
-    descAr: "شريحة ريب آي معرقة بالدهون لمذاق عصيري وطعم شواء لا يقاوم.",
-    descEn: "Marble-textured ribeye steak for a juicy bite and rich grilling flavor.",
-    price: 520,
-    category: "meats",
-    image: "/images/ribeye_steak.png",
-    weight: "800g"
-  },
-  {
-    id: "m8",
-    nameAr: "فخدة ضاني كاملة",
-    nameEn: "Whole Lamb Leg (Fakhda)",
-    descAr: "فخدة ضاني ممتازة للعزومات والمناسبات، مناسبة للشواء الطويل في الفرن.",
-    descEn: "Premium whole leg of lamb, perfect for family gatherings and slow oven roasting.",
-    price: 980,
+    id: "m_dani_kamel",
+    nameAr: "ضاني كامل",
+    nameEn: "Whole Lamb",
+    descAr: "خروف ضاني بلدي كامل منظف ومجهز بالكامل للعزومات والمناسبات الفاخرة.",
+    descEn: "Whole local lamb, fully cleaned and prepped for major events and celebrations.",
+    price: 13000,
     category: "meats",
     image: "/images/lamb_shoulder.png",
-    weight: "2 kg"
+    weight: "22 كجم"
   },
   {
-    id: "m9",
-    nameAr: "ستيك کندوز متبل جاهز",
+    id: "m_ribeye",
+    nameAr: "لحم ريب آي",
+    nameEn: "Beef Ribeye Steak",
+    descAr: "شرائح ستيك ريب آي معرقة بالدهون لمذاق عصيري وطعم شواء لا يقاوم.",
+    descEn: "Well-marbled ribeye steak slices for a juicy bite and rich grilling taste.",
+    price: 550,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/ribeye_steak.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_kebda_baqary",
+    nameAr: "كبدة بقري",
+    nameEn: "Fresh Beef Liver",
+    descAr: "كبدة بقري طازجة مقطعة حسب الطلب، غنية بالحديد وجاهزة للطهي السريع.",
+    descEn: "Freshly sliced beef liver, rich in nutrients and iron, perfect for quick cooking.",
+    price: 550,
+    category: "meats",
+    image: "/images/beef_tenderloin.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_kandooz_steak",
+    nameAr: "كندوز ستيك متبل",
     nameEn: "Marinated Veal Steak (Kandooz)",
-    descAr: "شرائح لحم كندوز طرية متبلة بخلطتنا الخاصة الجاهزة للطهي الفوري.",
-    descEn: "Tender veal slices marinated in our special blend, ready for immediate cooking.",
+    descAr: "شرائح لحم كندوز طرية متبلة بخلطة ديليشس الخاصة الجاهزة للطهي الفوري.",
+    descEn: "Tender veal steak slices marinated in our signature seasoning blend.",
+    price: 550,
+    category: "meats",
+    image: "/images/ribeye_steak.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_sogoq_dani",
+    nameAr: "سجق ضاني",
+    nameEn: "Lamb Sausage (Sogoq)",
+    descAr: "سجق ضاني بلدي محشو بالبهارات الشرقية المميزة وبدون مواد حافظة.",
+    descEn: "Traditional lamb sausage crafted with oriental spices and natural casing.",
+    price: 525,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/lamb_chops.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_kebab_halla",
+    nameAr: "كباب حلة",
+    nameEn: "Kebab Halla Beef Cubes",
+    descAr: "قطع لحم بقري طرية حمراء قليلة الدهون مثالية لطبق كباب الحلة المصري.",
+    descEn: "Tender lean beef cubes perfect for traditional Egyptian Kebab Halla stew.",
+    price: 550,
+    category: "meats",
+    image: "/images/beef_shank.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_beef_cubes",
+    nameAr: "لحم بقري قطع",
+    nameEn: "Beef Meat Cubes",
+    descAr: "قطع لحم بقري طازجة ومقطعة بعناية مناسبة للطواجن والخضار والطهي اليومي.",
+    descEn: "Fresh beef cubes expertly cut for stews, tagines, and daily cooking.",
+    price: 500,
+    category: "meats",
+    image: "/images/beef_shank.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_beef_cubes_super",
+    nameAr: "لحم بقري سوبر قطع",
+    nameEn: "Super Beef Cubes",
+    descAr: "قطع لحم بقري سوبر ممتازة من أفضل قطعيات العجل طرية وحمراء خالية من الدهون.",
+    descEn: "Super premium lean beef cuts from choice tender muscle groups.",
+    price: 550,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/beef_roast.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_minced_beef",
+    nameAr: "لحم مفروم",
+    nameEn: "Minced Beef",
+    descAr: "لحم بقري مفروم طازج بنسبة دهون متوازنة مناسب للرقاق والبشاميل والكفتة.",
+    descEn: "Freshly minced beef with balanced fat ratio for pasta bakes and meatballs.",
+    price: 450,
+    category: "meats",
+    image: "/images/beef_roast.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_minced_beef_super",
+    nameAr: "لحم مفروم سوبر",
+    nameEn: "Super Minced Beef",
+    descAr: "لحم مفروم سوبر أحمر خالي من الدهون ومحضر من قطعيات اللحم الصافي.",
+    descEn: "Super lean extra-grade minced beef crafted from prime cuts.",
+    price: 550,
+    category: "meats",
+    image: "/images/beef_roast.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_sogoq_sharqi",
+    nameAr: "سجق شرقي",
+    nameEn: "Oriental Sausage (Sogoq)",
+    descAr: "سجق شرقي متبل بالثوم والبهارات المصرية الجاهزة للتحمير أو الصينية.",
+    descEn: "Egyptian oriental beef sausage seasoned with garlic and authentic spices.",
+    price: 450,
+    category: "meats",
+    image: "/images/lamb_chops.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_sogoq_sharqi_super",
+    nameAr: "سجق شرقي سوبر",
+    nameEn: "Super Oriental Sausage",
+    descAr: "سجق شرقي سوبر فاخر بقطعيات لحم حمراء مفرومة ناعم وبدون إضافة دهون زائدة.",
+    descEn: "Super extra-grade oriental sausage made from select lean meat.",
+    price: 525,
+    category: "meats",
+    image: "/images/lamb_chops.png",
+    weight: "1 كجم"
+  },
+  {
+    id: "m_beef_burger",
+    nameAr: "بيف برجر",
+    nameEn: "Classic Beef Burger",
+    descAr: "أقراص برجر بقري سميكة ومحضرة من لحم صافي بدون فول صويا.",
+    descEn: "Thick, juicy beef burger patties crafted from pure meat with no soy.",
     price: 450,
     category: "meats",
     image: "/images/ribeye_steak.png",
-    weight: "1 kg"
+    weight: "1 كجم"
   },
   {
-    id: "m10",
-    nameAr: "سجق ضاني بلدي",
-    nameEn: "Local Lamb Sausage (Sogoq)",
-    descAr: "سجق ضاني بلدي محشو بالبهارات الشرقية المميزة وبدون مواد حافظة.",
-    descEn: "Traditional lamb sausage stuffed with oriental spices, with no added preservatives.",
-    price: 360,
+    id: "m_beef_burger_super",
+    nameAr: "بيف برجر سوبر",
+    nameEn: "Super Beef Burger",
+    descAr: "أقراص برجر بقري سوبر فاخرة من قطعيات الستيك المعرقة بطعم الشواء الأصلي.",
+    descEn: "Super gourmet steakhouse-grade burger patties for the ultimate BBQ bite.",
+    price: 525,
     category: "meats",
     isBestSeller: true,
-    image: "/images/lamb_chops.png",
-    weight: "1 kg"
-  },
-  {
-    id: "m11",
-    nameAr: "لحم كباب حلة قطع",
-    nameEn: "Kebab Halla Beef Cubes",
-    descAr: "قطع لحم بقري صغيرة طرية وقليلة الدهون مثالية لطبق كباب الحلة المصري.",
-    descEn: "Small, tender, lean beef cubes ideal for traditional Egyptian Kebab Halla stew.",
-    price: 410,
-    category: "meats",
-    image: "/images/beef_shank.png",
-    weight: "1 kg"
-  },
-  {
-    id: "m12",
-    nameAr: "لحم بقري مفروم فاخر",
-    nameEn: "Premium Minced Beef",
-    descAr: "لحم بقري مفروم بنسبة دهون متوازنة (٨٠/٢٠) مناسب للرقاق والبشاميل والكفتة.",
-    descEn: "Minced beef with balanced fat ratio (80/20) suitable for pasta bake, pastry, and kofta.",
-    price: 350,
-    category: "meats",
-    image: "/images/beef_roast.png",
-    weight: "1 kg"
-  },
-  {
-    id: "m13",
-    nameAr: "بيف برجر كلاسيك",
-    nameEn: "Classic Beef Burger",
-    descAr: "أقراص برجر بقري سميكة ومحضرة من قطعيات لحم فاخرة بدون إضافات فول صويا.",
-    descEn: "Thick beef burger patties crafted from premium cuts with no soy additives.",
-    price: 390,
-    category: "meats",
     image: "/images/ribeye_steak.png",
-    weight: "800g (8 Patties)"
+    weight: "1 كجم"
   },
   {
-    id: "m14",
-    nameAr: "لحم اسكالوب بقري (بفتيك)",
+    id: "m_escalope",
+    nameAr: "لحم اسكالوب",
     nameEn: "Beef Escalope (Boftek)",
-    descAr: "شرائح لحم رفيعة ومطرقة جيداً، مثالية لعمل البفتيك المقلي المقرمش.",
-    descEn: "Thinly sliced and tenderized beef cuts, perfect for crispy fried escalope.",
-    price: 470,
+    descAr: "شرائح لحم رفيعة ومطرقة جيداً، مثالية لإعداد البفتيك المقلي المقرمش.",
+    descEn: "Thinly sliced, tenderized beef cutlets ready for crispy fried escalope.",
+    price: 550,
     category: "meats",
     image: "/images/beef_tenderloin.png",
-    weight: "1 kg"
+    weight: "1 كجم"
   },
   {
-    id: "m15",
-    nameAr: "ستيك انتركوت بقري",
+    id: "m_entrecote",
+    nameAr: "لحم انتركوت",
     nameEn: "Beef Entrecote Steak",
-    descAr: "شريحة انتركوت فرنسية مميزة مقطعة بسُمك مثالي للطهي على المقلاة بالزبدة والثوم.",
-    descEn: "Premium French cut entrecote steak, sliced to perfection for pan-searing with butter and garlic.",
-    price: 510,
+    descAr: "شريحة انتركوت فرنسية مميزة مقطعة بسُمك مثالي للطهي بالزبدة والثوم.",
+    descEn: "Prime French entrecote steak cut, sliced for pan-searing with butter.",
+    price: 550,
     category: "meats",
     image: "/images/ribeye_steak.png",
-    weight: "900g"
+    weight: "1 كجم"
   },
   {
-    id: "m16",
-    nameAr: "كفتة حاتي جاهزة للشواء",
-    nameEn: "Ready-to-Grill Kofta El Haty",
-    descAr: "كفتة بقري متبلة بالبصل والبهارات ومصبعة ومعدة لوضعها مباشرة على السيخ والشواء.",
-    descEn: "Beef kofta seasoned with onions and spices, shaped and ready to grill on skewers.",
-    price: 340,
+    id: "m_dawood_pasha",
+    nameAr: "كفتة داوود باشا",
+    nameEn: "Dawood Pasha Meatballs",
+    descAr: "كرات كفتة متبلة ومصبعة على الطريقة المصرية الأصلية لطهيها مع الصلصة.",
+    descEn: "Seasoned beef meatballs prepared in traditional style for tomato sauce stew.",
+    price: 425,
     category: "meats",
     image: "/images/meats_banner.png",
-    weight: "1 kg"
+    weight: "1 كجم"
+  },
+  {
+    id: "m_kofta_haty",
+    nameAr: "كفتة حاتي بقري",
+    nameEn: "Beef Kofta El Haty",
+    descAr: "كفتة بقري متبلة بالبصل والبهارات ومصبعة ومعدة لوضعها مباشرة على سيخ الشواء.",
+    descEn: "Classic beef kofta seasoned and shaped, ready to grill directly on skewers.",
+    price: 425,
+    category: "meats",
+    isBestSeller: true,
+    image: "/images/meats_banner.png",
+    weight: "1 كجم"
   },
 
-  // POULTRY (دواجن)
+  // ---------------------------------------------------------
+  // POULTRY (الدواجن الطازجة)
+  // ---------------------------------------------------------
   {
     id: "p1",
     nameAr: "دجاجة كاملة منظفة",
     nameEn: "Whole Cleaned Chicken",
     descAr: "دجاجة كاملة مغسولة ومعقمة جيداً محفوظة بعناية للحفاظ على قيمتها الغذائية.",
-    descEn: "Whole chicken thoroughly cleaned and sanitized to preserve freshness and nutrients.",
+    descEn: "Whole chicken thoroughly cleaned and sanitized to preserve nutrients.",
     price: 185,
     category: "poultry",
     isBestSeller: true,
     image: "/images/whole_chicken.png",
-    weight: "1.2 kg"
+    weight: "1.2 كجم"
   },
   {
     id: "p2",
     nameAr: "صدور دجاج مخلية (بانيه)",
     nameEn: "Boneless Chicken Breast (Pane)",
     descAr: "صدور دجاج مخلية من العظم والجلد تماماً، مقطعة شرائح متساوية وجاهزة للتبيل.",
-    descEn: "Skinless boneless chicken breast slices, cut evenly and ready for breading/marination.",
+    descEn: "Skinless boneless chicken breast slices, cut evenly for breading.",
     price: 240,
     category: "poultry",
     isBestSeller: true,
     image: "/images/chicken_breasts.png",
-    weight: "1 kg"
+    weight: "1 كجم"
   },
   {
     id: "p3",
     nameAr: "أوراك دجاج طازجة",
     nameEn: "Fresh Chicken Thighs (Awraq)",
     descAr: "أوراك دجاج نظيفة ومثالية لعمل الحمام الكداب أو الشواء بالفرن مع الخضار.",
-    descEn: "Clean chicken thighs, ideal for stuffed chicken rollups or roasting with vegetables.",
+    descEn: "Clean chicken thighs, ideal for stuffed chicken rollups or roasting.",
     price: 160,
     category: "poultry",
     image: "/images/chicken_breasts.png",
-    weight: "1 kg"
+    weight: "1 كجم"
   },
   {
     id: "p4",
-    nameAr: "أجنحة دجاج جامبو",
-    nameEn: "Jumbo Chicken Wings",
-    descAr: "أجنحة دجاج كاملة ممتازة لوصفات البافالو والوينجز المقرمشة بالفرن.",
-    descEn: "Whole chicken wings, excellent for crispy oven-baked buffalo wings.",
-    price: 110,
-    category: "poultry",
-    image: "/images/whole_chicken.png",
-    weight: "1 kg"
-  },
-  {
-    id: "p5",
-    nameAr: "كبدة وقوانص دجاج نظيفة",
-    nameEn: "Clean Chicken Liver & Gizzards",
-    descAr: "كبد وقوانص دجاج مغسولة بعناية وخالية من الروائح، مثالية للطواجن المصرية بالأرز.",
-    descEn: "Thoroughly washed chicken livers and gizzards, perfect for traditional rice tagines.",
-    price: 130,
-    category: "poultry",
-    image: "/images/poultry_banner.png",
-    weight: "1 kg"
-  },
-  {
-    id: "p6",
-    nameAr: "لحم دجاج مفروم",
-    nameEn: "Minced Chicken Meat",
-    descAr: "صدور وأوراك دجاج مفرومة ناعم لتجهيز كفتة الدجاج والبرجر البيتي الصحي.",
-    descEn: "Finely minced chicken breast and thigh meat, ready for healthy chicken kofta or patties.",
-    price: 210,
-    category: "poultry",
-    image: "/images/chicken_breasts.png",
-    weight: "1 kg"
-  },
-  {
-    id: "p7",
-    nameAr: "بط بلدي فاخر",
-    nameEn: "Premium Local Duck",
-    descAr: "بط بلدي مسمن جيداً ذو لحم غني بالنكهة، منظف ومجهز لعزومات البط بالبرتقال.",
-    descEn: "Well-fattened local duck with rich flavorful meat, cleaned and prepped for roasting.",
-    price: 320,
-    category: "poultry",
-    isBestSeller: true,
-    image: "/images/whole_chicken.png",
-    weight: "2.2 kg"
-  },
-  {
-    id: "p8",
-    nameAr: "ديك رومي كامل",
-    nameEn: "Whole Turkey (Romy)",
-    descAr: "ديك رومي كبير الحجم، نظيف ومجهز ومثالي للمناسبات الكبرى والأعياد.",
-    descEn: "Large whole turkey, fully cleaned and prepped, perfect for major holidays and feasts.",
-    price: 850,
-    category: "poultry",
-    image: "/images/recipe_saturday.png",
-    weight: "5 kg"
-  },
-  {
-    id: "p9",
     nameAr: "شيش طاووق متبل جاهز",
     nameEn: "Marinated Shish Tawook Cubes",
     descAr: "مكعبات أوراك دجاج طرية متبلة بالزبادي والليمون والبهارات للشواء على الأسياخ.",
-    descEn: "Tender boneless chicken thigh cubes marinated in yogurt, lemon, and spices for skewers.",
+    descEn: "Tender chicken thigh cubes marinated in yogurt and lemon for skewers.",
     price: 230,
     category: "poultry",
     image: "/images/chicken_breasts.png",
-    weight: "1 kg"
+    weight: "1 كجم"
   },
   {
-    id: "p10",
-    nameAr: "دبوس دجاج مقرمش متبل",
-    nameEn: "Marinated Chicken Drumsticks",
-    descAr: "دبابيس دجاج طازجة متبلة ببهارات كرسبي حارة خفيفة، جاهزة للتحمير السريع.",
-    descEn: "Fresh drumsticks marinated in mild spicy crispy spices, ready for golden frying.",
-    price: 175,
+    id: "p5",
+    nameAr: "بط بلدي فاخر",
+    nameEn: "Premium Local Duck",
+    descAr: "بط بلدي مسمن جيداً ذو لحم غني بالنكهة، منظف ومجهز لعزومات البط بالبرتقال.",
+    descEn: "Well-fattened local duck with rich flavorful meat, cleaned for roasting.",
+    price: 320,
     category: "poultry",
     image: "/images/whole_chicken.png",
-    weight: "1 kg"
+    weight: "2.2 كجم"
+  },
+  {
+    id: "p6",
+    nameAr: "ديك رومي كامل",
+    nameEn: "Whole Turkey (Romy)",
+    descAr: "ديك رومي كبير الحجم، نظيف ومجهز ومثالي للمناسبات الكبرى والأعياد.",
+    descEn: "Large whole turkey, fully cleaned and prepped for holidays and feasts.",
+    price: 850,
+    category: "poultry",
+    image: "/images/recipe_saturday.png",
+    weight: "5 كجم"
   },
 
-  // OTHER (أخرى)
+  // ---------------------------------------------------------
+  // OTHER (مستلزمات الشواء والبهارات)
+  // ---------------------------------------------------------
   {
     id: "o1",
     nameAr: "فحم نباتي طبيعي للشواء",
     nameEn: "Natural Charcoal for Grilling",
     descAr: "فحم شواء طبيعي سريع الاشتعال ويدوم طويلاً بدون دخان كثيف أو روائح غريبة.",
-    descEn: "Fast-igniting, long-lasting natural lump charcoal with low smoke and no chemical odor.",
+    descEn: "Fast-igniting, long-lasting natural lump charcoal with low smoke.",
     price: 75,
     category: "other",
     isBestSeller: true,
     image: "/images/other_banner.png",
-    weight: "3 kg"
+    weight: "3 كجم"
   },
   {
     id: "o2",
     nameAr: "خلطة بهارات ديليشس للحوم",
     nameEn: "Delicious Meat Seasoning Blend",
     descAr: "تركيبة حصرية من سبع بهارات فاخرة تمنح اللحوم المشوية والمطهية نكهة مميزة.",
-    descEn: "Exclusive seven-spice gourmet blend that gives grilled and stewed meats a rich aroma.",
+    descEn: "Exclusive seven-spice gourmet blend for grilled and stewed meats.",
     price: 45,
     category: "other",
     image: "/images/other_banner.png",
-    weight: "150g"
+    weight: "150 جرام"
   },
   {
     id: "o3",
@@ -343,28 +397,6 @@ export const mockProducts: Product[] = [
     price: 120,
     category: "other",
     image: "/images/other_banner.png",
-    weight: "1 Set (6 Skewers)"
-  },
-  {
-    id: "o4",
-    nameAr: "خلطة بهارات الدواجن والبرجر",
-    nameEn: "Poultry & Burger Spice Mix",
-    descAr: "بهارات خاصة لتتبيل الدجاج والبرجر البيتي تعطي طعماً يشبه المطاعم.",
-    descEn: "Special seasoning mix for chicken and homemade burger patties for that restaurant taste.",
-    price: 45,
-    category: "other",
-    image: "/images/other_banner.png",
-    weight: "150g"
-  },
-  {
-    id: "o5",
-    nameAr: "شبكة شواء مزدوجة سلك",
-    nameEn: "Double Wire Grilling Basket",
-    descAr: "شبكة شواء سلكية مزدوجة مع مقبض خشبي طويل، مثالية لشواء الكفتة والريش والدجاج.",
-    descEn: "Double-sided wire grilling basket with a long wooden handle, ideal for kofta and ribs.",
-    price: 195,
-    category: "other",
-    image: "/images/other_banner.png",
-    weight: "1 Piece"
+    weight: "طقم (6 أسياخ)"
   }
 ];
