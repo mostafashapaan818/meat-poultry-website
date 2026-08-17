@@ -223,6 +223,41 @@ export default function TrackOrderPage() {
                         </div>
                       </div>
 
+                      {/* WhatsApp Direct Status Tracking Banner */}
+                      <div className="bg-green-950/40 border border-green-500/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-green-950/30">
+                        <div className="flex items-center gap-3 text-start">
+                          <div className="h-12 w-12 rounded-2xl bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400 flex-shrink-0">
+                            <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
+                              <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.555 4.197 1.608 6.02L.051 24l6.096-1.597c1.764.962 3.766 1.47 5.884 1.47 6.647 0 12.032-5.385 12.032-12.031S18.678 0 12.031 0zm6.541 17.001c-.274.773-1.359 1.416-2.215 1.596-.587.123-1.353.223-3.931-.844-3.3-1.365-5.426-4.71-5.59-4.93-.163-.22-1.336-1.78-1.336-3.396 0-1.616.844-2.41 1.144-2.738.3-.327.654-.409.873-.409.219 0 .437.003.627.013.201.01.47-.076.735.56.274.654.929 2.27.1009 2.434.081.164.136.356.027.573-.109.219-.164.355-.327.546-.164.191-.345.427-.148.766.196.338.871 1.437 1.87 2.327 1.285 1.144 2.368 1.5 2.707 1.664.338.164.536.136.733-.092.197-.228.844-.982 1.07-1.319.227-.338.455-.282.764-.164.309.119 1.961.925 2.298 1.093.338.164.563.246.646.382.082.137.082.793-.192 1.566z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-sm sm:text-base font-extrabold text-white">
+                              {language === "ar" ? "متابعة حالة الطلب عبر الواتساب" : "Track Order Status via WhatsApp"}
+                            </h4>
+                            <p className="text-xs text-green-300/80 mt-0.5">
+                              {language === "ar"
+                                ? `اضغط هنا لإرسال كود طلبك #${order.id} والتواصل المباشر مع الدعم`
+                                : `Click to send order code #${order.id} for live WhatsApp support`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <a
+                          href={`https://wa.me/201092719920?text=${encodeURIComponent(
+                            `متابعة حالة الطلب - كود الطلب: #${order.id}`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-green-500 hover:bg-green-400 text-dark-bg font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 transition-all flex-shrink-0"
+                        >
+                          <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.555 4.197 1.608 6.02L.051 24l6.096-1.597c1.764.962 3.766 1.47 5.884 1.47 6.647 0 12.032-5.385 12.032-12.031S18.678 0 12.031 0zm6.541 17.001c-.274.773-1.359 1.416-2.215 1.596-.587.123-1.353.223-3.931-.844-3.3-1.365-5.426-4.71-5.59-4.93-.163-.22-1.336-1.78-1.336-3.396 0-1.616.844-2.41 1.144-2.738.3-.327.654-.409.873-.409.219 0 .437.003.627.013.201.01.47-.076.735.56.274.654.929 2.27.1009 2.434.081.164.136.356.027.573-.109.219-.164.355-.327.546-.164.191-.345.427-.148.766.196.338.871 1.437 1.87 2.327 1.285 1.144 2.368 1.5 2.707 1.664.338.164.536.136.733-.092.197-.228.844-.982 1.07-1.319.227-.338.455-.282.764-.164.309.119 1.961.925 2.298 1.093.338.164.563.246.646.382.082.137.082.793-.192 1.566z" />
+                          </svg>
+                          <span>{language === "ar" ? "متابعة الطلب عبر الواتساب" : "Track via WhatsApp"}</span>
+                        </a>
+                      </div>
+
                       {/* Status Stepper (Active Timeline) */}
                       {!isCancelled ? (
                         <div className="space-y-4">

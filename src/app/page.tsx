@@ -52,14 +52,14 @@ export default function Home() {
       <main className="flex-grow">
         
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-12 pb-20 sm:pb-24 lg:pt-20 lg:pb-32 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_70%)]">
-          {/* Logo Background Watermark */}
-          <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 w-[320px] h-[320px] sm:w-[550px] sm:h-[550px] opacity-10 sm:opacity-15 pointer-events-none select-none z-0">
+        <section className="relative overflow-hidden pt-12 pb-20 sm:pb-24 lg:pt-20 lg:pb-32 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.15),transparent_70%)]">
+          {/* Clear & Prominent Logo Background Watermark */}
+          <div className="absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 w-[340px] h-[340px] sm:w-[600px] sm:h-[600px] opacity-30 sm:opacity-40 pointer-events-none select-none z-0">
             {/* eslint-disable-next-html-extension/next-image-unoptimized */}
             <img
               src="/images/logo.png"
               alt=""
-              className="w-full h-full object-contain filter drop-shadow-[0_0_50px_rgba(212,175,55,0.3)] brightness-125"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_60px_rgba(212,175,55,0.4)] brightness-125 contrast-125"
             />
           </div>
 
