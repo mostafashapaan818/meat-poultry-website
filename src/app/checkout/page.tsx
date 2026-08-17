@@ -137,9 +137,9 @@ export default function CheckoutPage() {
       console.error("API send order error:", err);
     }
 
-    // Direct backup POST to PHP MySQL URL if defined
+    // Direct backup POST to PHP MySQL URL if defined and secure
     const phpUrl = process.env.NEXT_PUBLIC_PHP_API_URL;
-    if (phpUrl) {
+    if (phpUrl && phpUrl.startsWith("https")) {
       try {
         await fetch(phpUrl, {
           method: "POST",

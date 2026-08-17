@@ -131,9 +131,10 @@ export default function AdminDashboard() {
   // Fetch live orders from central server API so orders from phones appear in real time
   const fetchLiveOrders = async () => {
     try {
-      const phpUrl = process.env.NEXT_PUBLIC_PHP_API_URL;
-      const targetUrl = phpUrl || "/api/orders";
-      const res = await fetch(targetUrl);
+      const res = await fetch("/api/orders", {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.orders && Array.isArray(data.orders)) {
