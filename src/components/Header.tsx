@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
-import { ShoppingCart, Menu, X, ShieldAlert, Globe } from "lucide-react";
+import { ShoppingCart, Menu, X, Globe } from "lucide-react";
 
 export default function Header() {
   const { language, setLanguage, t, dir } = useLanguage();
@@ -30,44 +30,41 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full glass-effect border-b border-dark-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
-          {/* Logo */}
+          {/* Logo Container */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-1.5 sm:gap-2.5">
               {!logoError ? (
                 <Image
                   src="/images/logo.png"
                   alt={t("brandName")}
-                  width={52}
-                  height={52}
-                  className="rounded-xl object-contain"
+                  width={42}
+                  height={42}
+                  className="rounded-xl object-contain w-9 h-9 sm:w-12 sm:h-12 flex-shrink-0"
                   onError={() => setLogoError(true)}
                   priority
                 />
               ) : null}
               <div className="flex flex-col">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                  {logoError && <span className="text-primary font-black">★</span>}
+                <span className="text-base sm:text-xl lg:text-2xl font-black tracking-tight text-white leading-tight">
                   {t("brandName")}
                 </span>
-                <span className="text-[10px] text-primary tracking-widest text-opacity-80">
+                <span className="text-[9px] sm:text-[10px] text-primary tracking-widest opacity-90 hidden sm:block">
                   {t("brandSub")}
                 </span>
               </div>
             </Link>
           </div>
 
-
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-1 lg:space-x-4 items-center">
-            {/* Nav links need spacing adjustment for RTL/LTR */}
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-4">
             <div className={`flex gap-6 ${dir === "rtl" ? "flex-row-reverse" : "flex-row"}`}>
               <Link
                 href="/"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/" ? "text-primary border-b border-primary pb-1" : "text-gray-300"
+                className={`text-sm font-semibold transition-colors hover:text-primary ${
+                  pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-gray-300"
                 }`}
               >
                 {t("home")}
@@ -76,9 +73,9 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                  className={`text-sm font-semibold transition-colors hover:text-primary ${
                     isActive(link.href)
-                      ? "text-primary border-b border-primary pb-1"
+                      ? "text-primary border-b-2 border-primary pb-1"
                       : "text-gray-300"
                   }`}
                 >
@@ -89,51 +86,52 @@ export default function Header() {
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dark-border bg-dark-bg/60 text-xs sm:text-sm font-semibold text-gray-300 hover:text-primary hover:border-primary transition-all duration-200"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full border border-dark-border bg-dark-bg/80 text-xs font-bold text-gray-200 hover:text-primary hover:border-primary transition-all duration-200"
               aria-label="Toggle language"
             >
-              <Globe className="h-4 w-4 text-primary" />
+              <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               <span>{language === "ar" ? "English" : "العربية"}</span>
             </button>
 
             {/* Cart Icon */}
             <Link
               href="/cart"
-              className="relative p-2.5 rounded-full border border-dark-border bg-dark-bg/60 text-gray-300 hover:text-primary hover:border-primary transition-all duration-200"
+              className="relative p-2 sm:p-2.5 rounded-full border border-dark-border bg-dark-bg/80 text-gray-200 hover:text-primary hover:border-primary transition-all duration-200 flex items-center justify-center"
+              aria-label="View Cart"
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-primary text-dark-bg text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center shadow-lg animate-pulse-slow">
+                <span className="absolute -top-1.5 -right-1.5 bg-primary text-dark-bg text-[10px] font-black h-4.5 w-4.5 sm:h-5 sm:w-5 rounded-full flex items-center justify-center shadow-lg animate-pulse-slow">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-lg border border-dark-border bg-dark-bg/60 text-gray-300 hover:text-primary hover:border-primary transition-all duration-200"
+              className="md:hidden p-2 rounded-xl border border-dark-border bg-dark-bg/80 text-gray-200 hover:text-primary hover:border-primary transition-all duration-200"
               aria-label="Toggle menu"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Dropdown Menu */}
       {isOpen && (
-        <div className="md:hidden glass-effect border-b border-dark-border animate-in slide-in-from-top-5 duration-200">
-          <div className="px-2 pt-2 pb-4 space-y-1 sm:px-3 text-center flex flex-col items-center">
+        <div className="md:hidden bg-dark-surface/95 border-b border-dark-border shadow-2xl backdrop-blur-xl animate-in slide-in-from-top-3 duration-200">
+          <div className="px-4 pt-3 pb-5 space-y-2 text-center flex flex-col items-center">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
-              className={`block w-full py-3 px-4 rounded-lg text-base font-semibold hover:bg-dark-surface/60 transition-colors ${
-                pathname === "/" ? "text-primary bg-dark-surface" : "text-gray-300"
+              className={`block w-full py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                pathname === "/" ? "text-primary bg-dark-bg/80 border border-primary/20" : "text-gray-200 hover:bg-dark-bg/40"
               }`}
             >
               {t("home")}
@@ -143,8 +141,8 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className={`block w-full py-3 px-4 rounded-lg text-base font-semibold hover:bg-dark-surface/60 transition-colors ${
-                  isActive(link.href) ? "text-primary bg-dark-surface" : "text-gray-300"
+                className={`block w-full py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                  isActive(link.href) ? "text-primary bg-dark-bg/80 border border-primary/20" : "text-gray-200 hover:bg-dark-bg/40"
                 }`}
               >
                 {t(link.labelKey)}

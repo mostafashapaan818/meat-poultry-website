@@ -75,7 +75,7 @@ export default function Home() {
                   </span>
                 </div>
                 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight">
+                <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-white leading-tight">
                   {t("heroTitle")}
                 </h1>
                 

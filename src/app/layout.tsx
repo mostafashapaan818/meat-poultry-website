@@ -32,8 +32,8 @@ export default function RootLayout({
   return (
     <LanguageProvider>
       <CartProvider>
-        <html lang="ar" dir="rtl" className={`${cairo.variable} ${inter.variable}`}>
-          <body className="min-h-screen bg-dark-bg text-gray-100 flex flex-col antialiased">
+        <html lang="ar" dir="rtl" className={`${cairo.variable} ${inter.variable} overflow-x-hidden max-w-full`}>
+          <body className="min-h-screen bg-dark-bg text-gray-100 flex flex-col antialiased overflow-x-hidden max-w-full w-full">
             {children}
           </body>
         </html>
