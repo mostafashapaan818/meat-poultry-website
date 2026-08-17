@@ -5,13 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { DailyRecipe, getStoredDailyRecipes } from "@/data/dailyRecipes";
-import { Clock, Users, Sparkles, ChefHat, CheckCircle2, ArrowLeft, ArrowRight, BookOpen, UtensilsCrossed } from "lucide-react";
+import { mockProducts } from "@/data/products";
+import ProductCard from "@/components/ProductCard";
+import { Clock, Users, Sparkles, ChefHat, CheckCircle2, ArrowLeft, ArrowRight, BookOpen, UtensilsCrossed, X, ShoppingBag } from "lucide-react";
 
 export default function DailyDishSection() {
   const { language, dir } = useLanguage();
   const [recipes, setRecipes] = useState<DailyRecipe[]>(getStoredDailyRecipes());
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(6); // Default Saturday
   const [activeTab, setActiveTab] = useState<"ingredients" | "instructions">("ingredients");
+  const [isCutModalOpen, setIsCutModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // Set active day to today's day of week
@@ -214,6 +217,33 @@ export default function DailyDishSection() {
                       ))}
                     </div>
                   )}
+
+                  {/* YouTube Video Player */}
+                  {currentRecipe.videoUrl && (
+                    <div className="mt-5 rounded-2xl overflow-hidden border border-primary/30 shadow-lg shadow-primary/10">
+                      <div className="bg-dark-bg/60 backdrop-blur-sm px-4 py-2.5 flex items-center gap-2 border-b border-primary/20">
+                        <svg className="h-4 w-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <span className="text-xs font-bold text-white">
+                          {language === "ar" ? "شاهد فيديو الوصفة" : "Watch Recipe Video"}
+                        </span>
+                      </div>
+                      <div className="relative w-full" style={{paddingBottom: "56.25%"}}>
+                        <iframe
+                          className="absolute inset-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${
+                            currentRecipe.videoUrl.includes("youtu.be/")
+                              ? currentRecipe.videoUrl.split("youtu.be/")[1]?.split("?")[0]
+                              : currentRecipe.videoUrl.split("v=")[1]?.split("&")[0]
+                          }?rel=0&modestbranding=1`}
+                          title={language === "ar" ? currentRecipe.titleAr : currentRecipe.titleEn}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer Action CTA */}
@@ -223,15 +253,15 @@ export default function DailyDishSection() {
                       ? "احصل على أفضل القطعيات الطازجة لتطبيق هذه الوصفة اليوم!"
                       : "Get fresh top-grade cuts delivered to recreate this dish today!"}
                   </div>
-                  <Link
-                    href={`/category/${currentRecipe.relatedCutCategory || "meats"}`}
+                  <button
+                    onClick={() => setIsCutModalOpen(true)}
                     className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-primary text-dark-bg font-extrabold text-xs sm:text-sm hover:bg-primary-hover active:scale-95 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                   >
+                    <ShoppingBag className="h-4 w-4" />
                     <span>
                       {language === "ar" ? "اطلب القطعية الخاصة بهذه الوصفة" : "Order Meat for this Recipe"}
                     </span>
-                    {dir === "rtl" ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-                  </Link>
+                  </button>
                 </div>
 
               </div>
@@ -241,6 +271,68 @@ export default function DailyDishSection() {
         )}
 
       </div>
+
+      {/* Dish Cut Products Popup Modal */}
+      {isCutModalOpen && currentRecipe && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            onClick={() => setIsCutModalOpen(false)}
+            className="absolute inset-0 bg-dark-bg/85 backdrop-blur-md"
+          />
+
+          <div className="relative bg-dark-surface border border-dark-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl p-6 sm:p-8 animate-in zoom-in-95 duration-200 z-10 max-h-[85vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-dark-border/80 pb-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2 text-primary font-bold text-xs">
+                  <ChefHat className="h-4 w-4" />
+                  <span>{language === "ar" ? "قطعيات طبق اليوم" : "Dish of the Day Cuts"}</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
+                  {language === "ar" ? currentRecipe.titleAr : currentRecipe.titleEn}
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setIsCutModalOpen(false)}
+                className="p-2 rounded-xl border border-dark-border text-gray-400 hover:text-white hover:bg-dark-bg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body - Products Grid */}
+            <div className="overflow-y-auto flex-grow pr-1 pl-1">
+              <p className="text-xs sm:text-sm text-gray-300 mb-6 leading-relaxed">
+                {language === "ar"
+                  ? "اختر القطعيات والمكونات الطازجة اللازمة لإعداد هذه الوصفة وأضفها لسلتك مباشرة:"
+                  : "Select the fresh cuts and ingredients needed for this recipe and add them to your cart:"}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-4">
+                {mockProducts
+                  .filter((p) => p.category === (currentRecipe.relatedCutCategory || "meats"))
+                  .slice(0, 6)
+                  .map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-dark-border/80 flex justify-end">
+              <button
+                onClick={() => setIsCutModalOpen(false)}
+                className="px-6 py-2.5 rounded-xl bg-primary text-dark-bg font-extrabold text-xs sm:text-sm hover:bg-primary-hover transition-colors"
+              >
+                {language === "ar" ? "إغلاق النافذة" : "Close"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </section>
   );
 }

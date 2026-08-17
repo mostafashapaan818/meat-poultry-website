@@ -22,7 +22,7 @@ export const mockProducts: Product[] = [
     price: 420,
     category: "meats",
     isBestSeller: true,
-    image: "beef_shank",
+    image: "/images/beef_shank.png",
     weight: "1 kg"
   },
   {
@@ -34,7 +34,7 @@ export const mockProducts: Product[] = [
     price: 490,
     category: "meats",
     isBestSeller: true,
-    image: "beef_roast",
+    image: "/images/beef_roast.png",
     weight: "1.5 kg"
   },
   {
@@ -46,7 +46,7 @@ export const mockProducts: Product[] = [
     price: 550,
     category: "meats",
     isBestSeller: true,
-    image: "beef_tenderloin",
+    image: "/images/beef_tenderloin.png",
     weight: "1 kg"
   },
   {
@@ -57,7 +57,7 @@ export const mockProducts: Product[] = [
     descEn: "Bone-in lamb shoulder, rich in flavor and tender, perfect for oven roasting with rice.",
     price: 460,
     category: "meats",
-    image: "lamb_shoulder",
+    image: "/images/lamb_shoulder.png",
     weight: "1.2 kg"
   },
   {
@@ -69,13 +69,13 @@ export const mockProducts: Product[] = [
     price: 480,
     category: "meats",
     isBestSeller: true,
-    image: "lamb_chops",
+    image: "/images/lamb_chops.png",
     weight: "1 kg"
   },
   {
     id: "m6",
-    nameAr: "كبدة بقري طازجة مجمدة",
-    nameEn: "Fresh-Frozen Beef Liver",
+    nameAr: "كبدة بقري طازجة",
+    nameEn: "Fresh Beef Liver",
     descAr: "كبدة بقري مقطعة شرائح أو مكعبات حسب الطلب، غنية بالحديد وجاهزة للطهي السريع.",
     descEn: "Sliced or cubed beef liver, rich in iron and ready for quick pan-frying.",
     price: 380,
@@ -91,7 +91,7 @@ export const mockProducts: Product[] = [
     descEn: "Marble-textured ribeye steak for a juicy bite and rich grilling flavor.",
     price: 520,
     category: "meats",
-    image: "ribeye_steak",
+    image: "/images/ribeye_steak.png",
     weight: "800g"
   },
   {
@@ -198,14 +198,14 @@ export const mockProducts: Product[] = [
   // POULTRY (دواجن)
   {
     id: "p1",
-    nameAr: "دجاجة كاملة منظفة ومجمدة",
+    nameAr: "دجاجة كاملة منظفة",
     nameEn: "Whole Cleaned Chicken",
-    descAr: "دجاجة كاملة مغسولة ومعقمة جيداً ومجمدة سريعاً للحفاظ على قيمتها الغذائية.",
-    descEn: "Whole chicken thoroughly cleaned, sanitized, and quick-frozen to preserve nutrients.",
+    descAr: "دجاجة كاملة مغسولة ومعقمة جيداً محفوظة بعناية للحفاظ على قيمتها الغذائية.",
+    descEn: "Whole chicken thoroughly cleaned and sanitized to preserve freshness and nutrients.",
     price: 185,
     category: "poultry",
     isBestSeller: true,
-    image: "whole_chicken",
+    image: "/images/whole_chicken.png",
     weight: "1.2 kg"
   },
   {
@@ -217,13 +217,13 @@ export const mockProducts: Product[] = [
     price: 240,
     category: "poultry",
     isBestSeller: true,
-    image: "chicken_breasts",
+    image: "/images/chicken_breasts.png",
     weight: "1 kg"
   },
   {
     id: "p3",
-    nameAr: "أوراك دجاج طازجة مجمدة",
-    nameEn: "Frozen Chicken Thighs (Awraq)",
+    nameAr: "أوراك دجاج طازجة",
+    nameEn: "Fresh Chicken Thighs (Awraq)",
     descAr: "أوراك دجاج نظيفة ومثالية لعمل الحمام الكداب أو الشواء بالفرن مع الخضار.",
     descEn: "Clean chicken thighs, ideal for stuffed chicken rollups or roasting with vegetables.",
     price: 160,
@@ -266,25 +266,25 @@ export const mockProducts: Product[] = [
   },
   {
     id: "p7",
-    nameAr: "بط بلدي مجمد فاخر",
-    nameEn: "Premium Local Frozen Duck",
+    nameAr: "بط بلدي فاخر",
+    nameEn: "Premium Local Duck",
     descAr: "بط بلدي مسمن جيداً ذو لحم غني بالنكهة، منظف ومجهز لعزومات البط بالبرتقال.",
     descEn: "Well-fattened local duck with rich flavorful meat, cleaned and prepped for roasting.",
     price: 320,
     category: "poultry",
     isBestSeller: true,
-    image: "frozen_duck",
+    image: "fresh_duck",
     weight: "2.2 kg"
   },
   {
     id: "p8",
-    nameAr: "ديك رومي كامل مجمد",
-    nameEn: "Whole Frozen Turkey (Romy)",
+    nameAr: "ديك رومي كامل",
+    nameEn: "Whole Turkey (Romy)",
     descAr: "ديك رومي كبير الحجم، نظيف ومجهز ومثالي للمناسبات الكبرى والأعياد.",
     descEn: "Large whole turkey, fully cleaned and prepped, perfect for major holidays and feasts.",
     price: 850,
     category: "poultry",
-    image: "frozen_turkey",
+    image: "fresh_turkey",
     weight: "5 kg"
   },
   {

@@ -21,10 +21,10 @@ export default function Footer() {
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-bold text-white">
-                {language === "ar" ? "توصيل سريع مجمد" : "Fast Frozen Delivery"}
+                {language === "ar" ? "توصيل طازج وسريع" : "Fast Fresh Delivery"}
               </h4>
               <p className="text-[10px] sm:text-xs text-dark-text-muted mt-0.5">
-                {language === "ar" ? "سيارات مجهزة للحفاظ على التجميد" : "Temperature controlled logistics"}
+                {language === "ar" ? "سيارات مجهزة مبردة تحفظ طلبك طازجاً" : "Refrigerated temperature controlled logistics"}
               </p>
             </div>
           </div>
@@ -83,8 +83,8 @@ export default function Footer() {
             </div>
             <p className="text-xs sm:text-sm text-dark-text-muted leading-relaxed">
               {language === "ar" 
-                ? "علامة تجارية رائدة تقدم أجود أنواع اللحوم الحمراء والدواجن الفاخرة المجمدة في مصر، نوفر لبيتك أفضل تجربة تسوق آمنة وسريعة." 
-                : "A leading brand delivering the finest selected frozen meats and premium poultry across Egypt. We ensure a safe, high-end shopping experience."}
+                ? "علامة تجارية رائدة تقدم أجود أنواع اللحوم الحمراء والدواجن الفاخرة الطازجة في مصر، نوفر لبيتك أفضل تجربة تسوق آمنة وسريعة." 
+                : "A leading brand delivering the finest selected fresh meats and premium poultry across Egypt. We ensure a safe, high-end shopping experience."}
             </p>
           </div>
 
@@ -108,6 +108,11 @@ export default function Footer() {
                 <li>
                   <Link href="/category/other" className="hover:text-primary transition-colors">
                     {t("other")}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/track-order" className="hover:text-primary transition-colors text-primary font-semibold">
+                    {language === "ar" ? "🔍 تتبع الطلب" : "🔍 Track Order"}
                   </Link>
                 </li>
               </ul>

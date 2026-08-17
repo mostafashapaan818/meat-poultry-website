@@ -9,7 +9,7 @@ import { mockProducts, Product } from "@/data/products";
 import { DailyRecipe, getStoredDailyRecipes, saveStoredDailyRecipes } from "@/data/dailyRecipes";
 import { 
   Lock, User, LogOut, CheckCircle, Package, ListOrdered, 
-  Trash2, Edit, Plus, Phone, MapPin, X, ChefHat, Sparkles, Clock, Users, BookOpen, UtensilsCrossed
+  Trash2, Edit, Plus, Phone, MapPin, X, ChefHat, Sparkles, Clock, Users, BookOpen, UtensilsCrossed, Printer, FileText
 } from "lucide-react";
 
 interface MockOrder {
@@ -71,7 +71,7 @@ const INITIAL_ORDERS: MockOrder[] = [
     area: "سموحة",
     address: "عمارات الضباط، عمارة ٦، شقة ١٢",
     items: [
-      { id: "p1", nameAr: "دجاجة كاملة منظفة ومجمدة", nameEn: "Whole Cleaned Chicken", price: 185, quantity: 3 }
+      { id: "p1", nameAr: "دجاجة كاملة منظفة وطازجة", nameEn: "Whole Cleaned Chicken", price: 185, quantity: 3 }
     ],
     totalValue: 605, // includes 50 EGP shipping
     status: "delivered",
@@ -107,6 +107,7 @@ export default function AdminDashboard() {
   const [prodPrice, setProdPrice] = useState("");
   const [prodCategory, setProdCategory] = useState<"meats" | "poultry" | "other">("meats");
   const [prodWeight, setProdWeight] = useState("");
+  const [prodImage, setProdImage] = useState("");
   const [formError, setFormError] = useState("");
 
   // Recipe Modal State
@@ -125,6 +126,7 @@ export default function AdminDashboard() {
   const [recInstructionsAr, setRecInstructionsAr] = useState("");
   const [recInstructionsEn, setRecInstructionsEn] = useState("");
   const [recImage, setRecImage] = useState("");
+  const [recVideoUrl, setRecVideoUrl] = useState("");
 
   // Fetch live orders from central server API so orders from phones appear in real time
   const fetchLiveOrders = async () => {
@@ -249,6 +251,7 @@ export default function AdminDashboard() {
     setProdPrice("");
     setProdCategory("meats");
     setProdWeight("1 kg");
+    setProdImage("/images/meats_banner.png");
     setFormError("");
     setShowProductModal(true);
   };
@@ -264,6 +267,7 @@ export default function AdminDashboard() {
     setProdPrice(product.price.toString());
     setProdCategory(product.category);
     setProdWeight(product.weight || "1 kg");
+    setProdImage(product.image || "");
     setFormError("");
     setShowProductModal(true);
   };
@@ -294,7 +298,7 @@ export default function AdminDashboard() {
         price: priceNum,
         category: prodCategory,
         weight: prodWeight,
-        image: "custom_product"
+        image: prodImage.trim() || "/images/meats_banner.png"
       };
       updatedProducts = [newProd, ...products];
     } else {
@@ -308,7 +312,8 @@ export default function AdminDashboard() {
             descEn: prodDescEn,
             price: priceNum,
             category: prodCategory,
-            weight: prodWeight
+            weight: prodWeight,
+            image: prodImage.trim() || p.image
           };
         }
         return p;
@@ -318,6 +323,106 @@ export default function AdminDashboard() {
     setProducts(updatedProducts);
     localStorage.setItem("delicious_meats_products", JSON.stringify(updatedProducts));
     setShowProductModal(false);
+  };
+
+  // PDF Export helper for orders
+  const handleDownloadPdf = (order: MockOrder) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const itemsRows = order.items
+      .map(
+        (item, idx) => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${idx + 1}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>${item.nameAr}</strong><br/><small style="color: #666;">${item.nameEn}</small></td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.price} ج.م</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-weight: bold;">${item.price * item.quantity} ج.م</td>
+      </tr>
+    `
+      )
+      .join("");
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="utf-8" />
+        <title>فاتورة طلب #${order.id} - ديليشس ميتس</title>
+        <style>
+          body { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 25px; color: #222; background: #fff; }
+          .header { text-align: center; border-bottom: 3px solid #D4AF37; padding-bottom: 15px; margin-bottom: 25px; }
+          .header h1 { margin: 0; color: #111; font-size: 26px; }
+          .header p { margin: 5px 0 0 0; color: #b8860b; font-weight: bold; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #fafafa; border: 1px solid #eee; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px; }
+          .info-box p { margin: 4px 0; font-size: 14px; }
+          .info-title { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 6px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+          th { background: #111; color: #fff; padding: 12px 10px; text-align: center; font-size: 13px; }
+          .total-box { text-align: right; background: #fff8e6; border: 1px solid #ffe099; padding: 15px 20px; border-radius: 10px; }
+          .total-box h2 { margin: 0; color: #b8860b; font-size: 22px; }
+          .footer-note { text-align: center; margin-top: 40px; font-size: 12px; color: #777; border-top: 1px dashed #ccc; padding-top: 15px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>ديليشس ميتس - Delicious Meats</h1>
+          <p>تفاصيل إيصال الطلب / Customer Order Invoice</p>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-box">
+            <div class="info-title">بيانات الطلب</div>
+            <p><strong>رقم مرجع الطلب:</strong> #${order.id}</p>
+            <p><strong>تاريخ الطلب:</strong> ${new Date(order.createdAt).toLocaleString("ar-EG")}</p>
+            <p><strong>حالة الطلب:</strong> ${order.status}</p>
+            <p><strong>طريقة الدفع:</strong> نقداً عند الاستلام</p>
+          </div>
+          <div class="info-box">
+            <div class="info-title">بيانات العميل والشحن</div>
+            <p><strong>اسم العميل:</strong> ${order.customerName}</p>
+            <p><strong>رقم الهاتف:</strong> ${order.phone}</p>
+            <p><strong>المحافظة والمنطقة:</strong> ${order.governorate} - ${order.area}</p>
+            <p><strong>العنوان التفصيلي:</strong> ${order.address}</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>المنتج</th>
+              <th>الكمية</th>
+              <th>سعر الوحدة</th>
+              <th>الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+          </tbody>
+        </table>
+
+        <div class="total-box">
+          <h2>الإجمالي الكلي: ${order.totalValue} ج.م</h2>
+        </div>
+
+        <div class="footer-note">
+          شكراً لتسوقكم من ديليشس ميتس - الخط الساخن: 19000 - info@deliciousmeats.me
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   // Open Recipe Edit Modal
@@ -336,6 +441,7 @@ export default function AdminDashboard() {
     setRecInstructionsAr(recipe.instructionsAr.join("\n"));
     setRecInstructionsEn(recipe.instructionsEn.join("\n"));
     setRecImage(recipe.image);
+    setRecVideoUrl(recipe.videoUrl || "");
     setShowRecipeModal(true);
   };
 
@@ -360,7 +466,8 @@ export default function AdminDashboard() {
           ingredientsEn: recIngredientsEn.split("\n").map((line) => line.trim()).filter(Boolean),
           instructionsAr: recInstructionsAr.split("\n").map((line) => line.trim()).filter(Boolean),
           instructionsEn: recInstructionsEn.split("\n").map((line) => line.trim()).filter(Boolean),
-          image: recImage
+          image: recImage,
+          videoUrl: recVideoUrl.trim() || undefined
         };
       }
       return r;
@@ -633,7 +740,7 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Bottom Order controls */}
-                      <div className="border-t border-dark-border/40 pt-3 flex items-center justify-between gap-4">
+                      <div className="border-t border-dark-border/40 pt-3 flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <span className="text-[10px] text-dark-text-muted block">{t("total")}</span>
                           <span className="text-sm font-extrabold text-primary">
@@ -641,12 +748,21 @@ export default function AdminDashboard() {
                           </span>
                         </div>
 
-                        {/* Status updating action dropdown */}
-                        <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleDownloadPdf(order)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-dark-bg transition-colors"
+                            title="تنزيل / طباعة فاتورة PDF"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            <span>تنزيل PDF</span>
+                          </button>
+
+                          {/* Status updating action dropdown */}
                           <select
                             value={order.status}
                             onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value as MockOrder["status"])}
-                            className="bg-dark-bg border border-dark-border rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-primary transition-colors"
+                            className="bg-dark-bg border border-dark-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary transition-colors"
                           >
                             <option value="new">{t("statusNew")}</option>
                             <option value="preparing">{t("statusPreparing")}</option>
@@ -948,6 +1064,21 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Product Image URL field */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-300 block">
+                  {language === "ar" ? "رابط / مسار صورة المنتج" : "Product Image URL / Path"}
+                </label>
+                <input
+                  type="text"
+                  value={prodImage}
+                  onChange={(e) => setProdImage(e.target.value)}
+                  placeholder="e.g. /images/beef_shank.png"
+                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                  dir="ltr"
+                />
+              </div>
+
               {/* Actions submit */}
               <div className="pt-4 border-t border-dark-border/40 flex justify-end gap-3">
                 <button
@@ -1097,6 +1228,29 @@ export default function AdminDashboard() {
                   className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary"
                   dir="ltr"
                 />
+              </div>
+
+              {/* YouTube Video URL */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                  <svg className="h-3.5 w-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                  رابط فيديو يوتيوب للوصفة (اختياري - YouTube Video URL)
+                </label>
+                <input
+                  type="url"
+                  value={recVideoUrl}
+                  onChange={(e) => setRecVideoUrl(e.target.value)}
+                  placeholder="https://youtu.be/... أو https://www.youtube.com/watch?v=..."
+                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-red-500 placeholder:text-gray-600"
+                  dir="ltr"
+                />
+                {recVideoUrl && (
+                  <p className="text-xs text-green-400 flex items-center gap-1 mt-1">
+                    <span>✓</span> <span>سيظهر الفيديو في صفحة طبق اليوم</span>
+                  </p>
+                )}
               </div>
 
               {/* Ingredients AR & EN */}

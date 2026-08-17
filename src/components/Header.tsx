@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
@@ -12,6 +13,7 @@ export default function Header() {
   const { cartCount } = useCart();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   const toggleLanguage = () => {
     setLanguage(language === "ar" ? "en" : "ar");
@@ -21,6 +23,7 @@ export default function Header() {
     { href: "/category/meats", labelKey: "meats" },
     { href: "/category/poultry", labelKey: "poultry" },
     { href: "/category/other", labelKey: "other" },
+    { href: "/track-order", labelKey: "trackOrder" },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -32,16 +35,30 @@ export default function Header() {
           
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                <span className="text-primary font-black">★</span>
-                {t("brandName")}
-              </span>
-              <span className="text-[10px] text-primary tracking-widest text-opacity-80">
-                {t("brandSub")}
-              </span>
+            <Link href="/" className="flex items-center gap-2">
+              {!logoError ? (
+                <Image
+                  src="/images/logo.png"
+                  alt={t("brandName")}
+                  width={52}
+                  height={52}
+                  className="rounded-xl object-contain"
+                  onError={() => setLogoError(true)}
+                  priority
+                />
+              ) : null}
+              <div className="flex flex-col">
+                <span className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-1.5">
+                  {logoError && <span className="text-primary font-black">★</span>}
+                  {t("brandName")}
+                </span>
+                <span className="text-[10px] text-primary tracking-widest text-opacity-80">
+                  {t("brandSub")}
+                </span>
+              </div>
             </Link>
           </div>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-1 lg:space-x-4 items-center">

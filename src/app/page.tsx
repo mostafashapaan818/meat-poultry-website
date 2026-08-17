@@ -53,7 +53,17 @@ export default function Home() {
         
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-12 pb-20 sm:pb-24 lg:pt-20 lg:pb-32 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.06),transparent_50%)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Logo Background Watermark */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] sm:w-[650px] sm:h-[650px] opacity-[0.06] pointer-events-none select-none z-0">
+            {/* eslint-disable-next-html-extension/next-image-unoptimized */}
+            <img
+              src="/images/logo.png"
+              alt=""
+              className="w-full h-full object-contain filter brightness-125"
+            />
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               
               {/* Left Column (Content) */}

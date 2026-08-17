@@ -12,9 +12,9 @@ const translations: Record<Language, TranslationDictionary> = {
   ar: {
     // General
     brandName: "ديليشس ميتس",
-    brandSub: "لحوم ودواجن فاخرة مجمدة",
+    brandSub: "لحوم ودواجن فاخرة طازجة",
     currency: "ج.م",
-    frozenBadge: "مُجمد فاخر",
+    frozenBadge: "طازجة فاخرة",
     backToShop: "العودة للتسوق",
     loading: "جاري التحميل...",
     
@@ -23,20 +23,21 @@ const translations: Record<Language, TranslationDictionary> = {
     meats: "لحوم",
     poultry: "دواجن",
     other: "أخرى",
+    trackOrder: "تتبع الطلب",
     dashboard: "لوحة التحكم",
     adminLink: "بوابة الموظفين",
     cart: "السلة",
     
     // Homepage
     heroTitle: "مذاق الفخامة في كل قطعية",
-    heroSubtitle: "نقدم لكم أجود أنواع اللحوم والدواجن الطازجة المجمدة بعناية فائقة وتوصيل سريع حتى باب منزلكم. جودة تثق بها لعائلتك.",
+    heroSubtitle: "نقدم لكم أجود أنواع اللحوم والدواجن الطازجة بعناية فائقة وتوصيل سريع حتى باب منزلكم. جودة تثق بها لعائلتك.",
     heroCTA: "تسوق منتجاتنا الفاخرة",
     bestSellers: "الأكثر مبيعاً",
     bestSellersSub: "منتجات مختارة بعناية تحظى برضا عملائنا",
     categories: "أقسام المنتجات",
     categoriesSub: "تصفح تشكيلتنا المتنوعة من اللحوم والدواجن الفاخرة",
     categoryMeatsDesc: "قطعيات لحم بقري وضاني فاخرة ومقطعة حسب رغبتكم.",
-    categoryPoultryDesc: "دواجن طازجة مجمدة كاملة أو قطع نظيفة وجاهزة للطهي.",
+    categoryPoultryDesc: "دواجن طازجة كاملة أو قطع نظيفة وجاهزة للطهي.",
     categoryOtherDesc: "توابل فاخرة، أسياخ فحم، ومستلزمات الشواء لإتمام وجبتكم.",
     viewCategory: "عرض القسم",
     
@@ -149,9 +150,9 @@ const translations: Record<Language, TranslationDictionary> = {
   en: {
     // General
     brandName: "Delicious Meats",
-    brandSub: "Premium Frozen Meat & Poultry",
+    brandSub: "Premium Fresh Meat & Poultry",
     currency: "EGP",
-    frozenBadge: "Premium Frozen",
+    frozenBadge: "Premium Fresh",
     backToShop: "Back to Shop",
     loading: "Loading...",
     
@@ -160,20 +161,21 @@ const translations: Record<Language, TranslationDictionary> = {
     meats: "Meats",
     poultry: "Poultry",
     other: "Other",
+    trackOrder: "Track Order",
     dashboard: "Dashboard",
     adminLink: "Staff Portal",
     cart: "Cart",
     
     // Homepage
     heroTitle: "Taste Premium Quality in Every Cut",
-    heroSubtitle: "We deliver the finest select cuts of fresh-frozen meats and poultry, carefully processed and delivered directly to your doorstep. Quality you can trust.",
+    heroSubtitle: "We deliver the finest select cuts of fresh meats and poultry, carefully processed and delivered directly to your doorstep. Quality you can trust.",
     heroCTA: "Shop Premium Cuts",
     bestSellers: "Best Sellers",
     bestSellersSub: "Hand-picked favorites highly rated by our customers",
     categories: "Categories",
     categoriesSub: "Browse our premium selection of meat, poultry, and grilling essentials",
     categoryMeatsDesc: "Premium cuts of beef and lamb, expertly sliced to your requirements.",
-    categoryPoultryDesc: "Fresh-frozen whole chicken, clean cuts, and pieces ready to cook.",
+    categoryPoultryDesc: "Fresh whole chicken, clean cuts, and pieces ready to cook.",
     categoryOtherDesc: "Exquisite seasonings, natural charcoal, and skewers to complete your BBQ.",
     viewCategory: "View Category",
     

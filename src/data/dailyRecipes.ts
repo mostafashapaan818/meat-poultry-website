@@ -17,6 +17,7 @@ export interface DailyRecipe {
   instructionsEn: string[];
   image: string;
   relatedCutCategory: "meats" | "poultry" | "other";
+  videoUrl?: string; // Optional YouTube video URL for the recipe
 }
 
 export const defaultDailyRecipes: DailyRecipe[] = [
@@ -154,7 +155,8 @@ export const defaultDailyRecipes: DailyRecipe[] = [
       "Return chicken to the sauce and simmer on low heat for 7 minutes."
     ],
     image: "/images/poultry_banner.png",
-    relatedCutCategory: "poultry"
+    relatedCutCategory: "poultry",
+    videoUrl: "https://youtu.be/6QPt2zxMzrA?si=wNmOAlGmq1eyEuD4"
   },
   {
     id: "day-tue",
