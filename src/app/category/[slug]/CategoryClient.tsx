@@ -18,7 +18,7 @@ export default function CategoryClient({ slug }: CategoryClientProps) {
   
   const [sortBy, setSortBy] = useState<string>("default");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 50;
 
   const categoryNames = {
     meats: { ar: "لحوم فاخرة", en: "Premium Meats" },

@@ -24,7 +24,7 @@ export const mockProducts: Product[] = [
     price: 550,
     category: "meats",
     isBestSeller: true,
-    image: "/images/beef_shank.png",
+    image: "/images/beef_moza.png",
     weight: "1 كجم"
   },
   {
@@ -140,7 +140,7 @@ export const mockProducts: Product[] = [
     price: 525,
     category: "meats",
     isBestSeller: true,
-    image: "/images/lamb_chops.png",
+    image: "/images/sogoq_sharqi.png",
     weight: "1 كجم"
   },
   {
@@ -207,7 +207,7 @@ export const mockProducts: Product[] = [
     descEn: "Egyptian oriental beef sausage seasoned with garlic and authentic spices.",
     price: 450,
     category: "meats",
-    image: "/images/lamb_chops.png",
+    image: "/images/sogoq_sharqi.png",
     weight: "1 كجم"
   },
   {
@@ -218,7 +218,7 @@ export const mockProducts: Product[] = [
     descEn: "Super extra-grade oriental sausage made from select lean meat.",
     price: 525,
     category: "meats",
-    image: "/images/lamb_chops.png",
+    image: "/images/sogoq_sharqi.png",
     weight: "1 كجم"
   },
   {
@@ -274,7 +274,7 @@ export const mockProducts: Product[] = [
     descEn: "Seasoned beef meatballs prepared in traditional style for tomato sauce stew.",
     price: 425,
     category: "meats",
-    image: "/images/meats_banner.png",
+    image: "/images/dawood_pasha.png",
     weight: "1 كجم"
   },
   {
@@ -286,7 +286,7 @@ export const mockProducts: Product[] = [
     price: 425,
     category: "meats",
     isBestSeller: true,
-    image: "/images/meats_banner.png",
+    image: "/images/kofta_haty.png",
     weight: "1 كجم"
   },
 
