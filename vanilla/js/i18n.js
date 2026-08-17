@@ -7,7 +7,7 @@ const TRANSLATIONS = {
   ar: {
     // Brand
     brandName: 'ديليشس ميتس',
-    brandTagline: 'لحوم ودواجن فاخرة مجمدة',
+    brandTagline: 'لحوم ودواجن فاخرة طازجة',
 
     // Nav
     navHome: 'الرئيسية',
@@ -20,11 +20,11 @@ const TRANSLATIONS = {
 
     // Hero
     heroTitle: 'مذاق الفخامة في كل قطعة',
-    heroSubtitle: 'أجود أنواع اللحوم والدواجن الفاخرة المجمدة — جودة تثق بها لعائلتك، موصلة حتى باب منزلك.',
+    heroSubtitle: 'أجود أنواع اللحوم والدواجن الفاخرة الطازجة — جودة تثق بها لعائلتك، موصلة حتى باب منزلك.',
     heroCTA: 'تسوق الآن',
 
     // Badges
-    frozenBadge: '❄ مجمد فاخر',
+    frozenBadge: '🍃 طازج فاخر',
     bestsellerBadge: '★ الأكثر مبيعاً',
 
     // Sections
@@ -36,7 +36,7 @@ const TRANSLATIONS = {
     categoryMeatsTitle: 'لحوم',
     categoryMeatsDesc: 'قطعيات لحم بقري وضاني فاخرة ومتنوعة.',
     categoryPoultryTitle: 'دواجن',
-    categoryPoultryDesc: 'دواجن طازجة مجمدة كاملة أو قطع نظيفة.',
+    categoryPoultryDesc: 'دواجن طازجة كاملة أو قطع نظيفة.',
     categoryOtherTitle: 'أخرى',
     categoryOtherDesc: 'توابل وفحم وأسياخ ومستلزمات الشواء.',
 

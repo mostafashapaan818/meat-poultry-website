@@ -22,6 +22,28 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  openGraph: {
+    title: "ديليشس ميتس | لحوم ودواجن فاخرة طازجة",
+    description: "المتجر الرائد لبيع قطعيات اللحوم والدواجن الفاخرة الطازجة وتوصيلها في مصر. جودة عالية ومذاق رائع.",
+    url: "https://deliciousmeats.vercel.app",
+    siteName: "ديليشس ميتس | Delicious Meats",
+    images: [
+      {
+        url: "https://deliciousmeats.vercel.app/images/logo.png",
+        width: 800,
+        height: 800,
+        alt: "Delicious Meats",
+      },
+    ],
+    locale: "ar_EG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ديليشس ميتس | لحوم ودواجن فاخرة طازجة",
+    description: "المتجر الرائد لبيع قطعيات اللحوم والدواجن الفاخرة الطازجة وتوصيلها في مصر. جودة عالية ومذاق رائع.",
+    images: ["https://deliciousmeats.vercel.app/images/logo.png"],
+  },
 };
 
 export default function RootLayout({
