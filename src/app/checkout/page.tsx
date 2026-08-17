@@ -126,7 +126,7 @@ export default function CheckoutPage() {
       console.error(err);
     }
 
-    // Send order to central backend API so it syncs across all devices and staff portal
+    // Send order to central backend API with multi-layer submission
     try {
       await fetch("/api/orders", {
         method: "POST",
@@ -135,6 +135,20 @@ export default function CheckoutPage() {
       });
     } catch (err) {
       console.error("API send order error:", err);
+    }
+
+    // Direct backup POST to PHP MySQL URL if defined
+    const phpUrl = process.env.NEXT_PUBLIC_PHP_API_URL;
+    if (phpUrl) {
+      try {
+        await fetch(phpUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newOrder)
+        });
+      } catch (err) {
+        console.error("Direct PHP POST error:", err);
+      }
     }
 
     setIsSubmitting(false);

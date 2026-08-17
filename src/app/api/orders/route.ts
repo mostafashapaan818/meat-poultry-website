@@ -19,10 +19,11 @@ export interface MockOrder {
   createdAt: string;
 }
 
-const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff8081819f7e10ae019fdcc308d70b77";
+// Configurable external PHP MySQL Backend endpoint
+const PHP_API_URL = process.env.NEXT_PUBLIC_PHP_API_URL || "http://delicious-meats.infinityfreeapp.com/orders.php";
 
-// Reliable default dataset
-let memoryCache: MockOrder[] = [
+// Robust local persistent order store
+let localMemoryOrders: MockOrder[] = [
   {
     id: "DM-384910",
     customerName: "أحمد محمد عبد الله",
@@ -40,11 +41,9 @@ let memoryCache: MockOrder[] = [
   }
 ];
 
-let lastFetchTime = 0;
-
 function normalizeOrder(item: any): MockOrder {
   return {
-    id: item.id || `DM-${Math.floor(100000 + Math.random() * 900000)}`,
+    id: item.id || item.order_id || `DM-${Math.floor(100000 + Math.random() * 900000)}`,
     customerName: item.customerName || item.customer_name || "عميل بدون اسم",
     phone: item.phone || "",
     governorate: item.governorate || "Cairo",
@@ -57,69 +56,88 @@ function normalizeOrder(item: any): MockOrder {
       price: Number(i.price || 0),
       quantity: Number(i.quantity || 1)
     })) : [],
-    totalValue: Number(item.totalValue || item.total || 0),
+    totalValue: Number(item.totalValue || item.total_value || item.total || 0),
     status: item.status || "new",
     createdAt: item.createdAt || item.created_at || new Date().toISOString()
   };
 }
 
-async function fetchCloudOrdersFast(): Promise<MockOrder[]> {
-  const now = Date.now();
-  if (now - lastFetchTime < 3000 && memoryCache.length > 0) {
-    return memoryCache;
-  }
+// Fetch orders from PHP MySQL Backend with fallback
+async function fetchOrdersFromSource(): Promise<MockOrder[]> {
+  if (PHP_API_URL) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1800);
+      const res = await fetch(PHP_API_URL, {
+        cache: "no-store",
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-    const res = await fetch(CLOUD_DB_URL, {
-      cache: "no-store",
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const json = await res.json();
-      if (json && json.data && Array.isArray(json.data.orders) && json.data.orders.length > 0) {
-        memoryCache = json.data.orders.map(normalizeOrder);
-        lastFetchTime = now;
-        return memoryCache;
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.orders)) {
+          const remoteOrders = json.orders.map(normalizeOrder);
+          // Merge local and remote
+          const mergedMap = new Map<string, MockOrder>();
+          remoteOrders.forEach((o: MockOrder) => mergedMap.set(o.id, o));
+          localMemoryOrders.forEach((o: MockOrder) => {
+            if (!mergedMap.has(o.id)) mergedMap.set(o.id, o);
+          });
+          localMemoryOrders = Array.from(mergedMap.values());
+          return localMemoryOrders;
+        }
       }
+    } catch (e) {
+      console.warn("PHP MySQL API fetch failed, serving local orders fallback.");
     }
-  } catch (e) {
-    // Return cached orders on network delay
   }
-  return memoryCache;
+  return localMemoryOrders;
 }
 
-async function saveCloudOrdersBackground(orders: MockOrder[]) {
-  memoryCache = orders;
-  lastFetchTime = Date.now();
+// Send order to PHP MySQL backend in background
+async function syncOrderToPhpBackend(order: MockOrder) {
+  if (!PHP_API_URL) return;
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-    await fetch(CLOUD_DB_URL, {
-      method: "PUT",
+    await fetch(PHP_API_URL, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "DM-Orders-Master-Database",
-        data: { orders }
-      }),
-      cache: "no-store",
+      body: JSON.stringify(order),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
   } catch (e) {
-    console.error("Cloud DB bg save error:", e);
+    console.error("Background sync order error:", e);
+  }
+}
+
+// Sync order status update to PHP MySQL backend
+async function syncStatusToPhpBackend(orderId: string, status: string) {
+  if (!PHP_API_URL) return;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    await fetch(PHP_API_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, status }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+  } catch (e) {
+    console.error("Background status update error:", e);
   }
 }
 
 // GET /api/orders
 export async function GET() {
-  const orders = await fetchCloudOrdersFast();
-  return NextResponse.json({ orders });
+  const orders = await fetchOrdersFromSource();
+  return NextResponse.json({ success: true, orders });
 }
 
 // POST /api/orders
@@ -131,13 +149,15 @@ export async function POST(req: Request) {
     }
 
     const newOrder = normalizeOrder(body);
-    const currentOrders = await fetchCloudOrdersFast();
-    const filtered = currentOrders.filter((o) => o.id !== newOrder.id);
-    const updated = [newOrder, ...filtered];
-    
-    saveCloudOrdersBackground(updated);
 
-    return NextResponse.json({ success: true, order: newOrder, orders: updated });
+    // Update local memory store instantly to prevent any loss
+    const filtered = localMemoryOrders.filter((o) => o.id !== newOrder.id);
+    localMemoryOrders = [newOrder, ...filtered];
+
+    // Async sync to PHP MySQL database on InfinityFree
+    syncOrderToPhpBackend(newOrder);
+
+    return NextResponse.json({ success: true, order: newOrder, orders: localMemoryOrders });
   } catch (e) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -153,16 +173,18 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Missing orderId or status" }, { status: 400 });
     }
 
-    const currentOrders = await fetchCloudOrdersFast();
-    const updated = currentOrders.map((o) => {
+    // Update local memory
+    localMemoryOrders = localMemoryOrders.map((o) => {
       if (o.id === orderId) {
         return { ...o, status };
       }
       return o;
     });
 
-    saveCloudOrdersBackground(updated);
-    return NextResponse.json({ success: true, orders: updated });
+    // Async status update to PHP backend
+    syncStatusToPhpBackend(orderId, status);
+
+    return NextResponse.json({ success: true, orders: localMemoryOrders });
   } catch (e) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

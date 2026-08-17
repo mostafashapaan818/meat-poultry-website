@@ -129,7 +129,9 @@ export default function AdminDashboard() {
   // Fetch live orders from central server API so orders from phones appear in real time
   const fetchLiveOrders = async () => {
     try {
-      const res = await fetch("/api/orders");
+      const phpUrl = process.env.NEXT_PUBLIC_PHP_API_URL;
+      const targetUrl = phpUrl || "/api/orders";
+      const res = await fetch(targetUrl);
       if (res.ok) {
         const data = await res.json();
         if (data.orders && Array.isArray(data.orders)) {
@@ -141,10 +143,15 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Error fetching live orders:", err);
+      // Local storage fallback
+      try {
+        const local = localStorage.getItem("delicious_meats_orders");
+        if (local) setOrders(JSON.parse(local));
+      } catch (e) {}
     }
   };
 
-  // Load state on mount and start 5-second live polling
+  // Load state on mount and start 3-second live polling
   useEffect(() => {
     // Auth Check
     const authStatus = localStorage.getItem("delicious_meats_admin_auth");
@@ -155,8 +162,8 @@ export default function AdminDashboard() {
     // Load Orders from server
     fetchLiveOrders();
 
-    // Auto-poll live orders every 5 seconds for orders placed on phones
-    const orderInterval = setInterval(fetchLiveOrders, 5000);
+    // Auto-poll live orders every 3 seconds for orders placed on phones
+    const orderInterval = setInterval(fetchLiveOrders, 3000);
 
     // Load Products
     const storedProducts = localStorage.getItem("delicious_meats_products");
