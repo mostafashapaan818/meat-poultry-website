@@ -374,6 +374,28 @@ export default function TrackOrderPage() {
                         </div>
                       </div>
 
+                      {/* WhatsApp Direct Inquiry Button */}
+                      <div className="pt-4 border-t border-dark-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="text-xs text-dark-text-muted">
+                          {language === "ar"
+                            ? "هل لديك أي استفسار حول هذا الطلب؟ تواصل معنا مباشرة عبر واتساب."
+                            : "Have a question regarding this order? Contact support directly via WhatsApp."}
+                        </div>
+                        <a
+                          href={`https://wa.me/201092719920?text=${encodeURIComponent(
+                            `متابعة حالة الطلب - كود الطلب: #${order.id}`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full sm:w-auto px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-600/25 transition-all flex-shrink-0"
+                        >
+                          <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.555 4.197 1.608 6.02L.051 24l6.096-1.597c1.764.962 3.766 1.47 5.884 1.47 6.647 0 12.032-5.385 12.032-12.031S18.678 0 12.031 0zm6.541 17.001c-.274.773-1.359 1.416-2.215 1.596-.587.123-1.353.223-3.931-.844-3.3-1.365-5.426-4.71-5.59-4.93-.163-.22-1.336-1.78-1.336-3.396 0-1.616.844-2.41 1.144-2.738.3-.327.654-.409.873-.409.219 0 .437.003.627.013.201.01.47-.076.735.56.274.654.929 2.27.1009 2.434.081.164.136.356.027.573-.109.219-.164.355-.327.546-.164.191-.345.427-.148.766.196.338.871 1.437 1.87 2.327 1.285 1.144 2.368 1.5 2.707 1.664.338.164.536.136.733-.092.197-.228.844-.982 1.07-1.319.227-.338.455-.282.764-.164.309.119 1.961.925 2.298 1.093.338.164.563.246.646.382.082.137.082.793-.192 1.566z" />
+                          </svg>
+                          <span>{language === "ar" ? "تواصل عبر واتساب لمتابعة الطلب" : "Inquire via WhatsApp"}</span>
+                        </a>
+                      </div>
+
                     </div>
                   );
                 })

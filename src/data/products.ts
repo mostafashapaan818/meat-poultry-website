@@ -7,7 +7,7 @@ export interface Product {
   price: number;
   category: "meats" | "poultry" | "other";
   isBestSeller?: boolean;
-  image: string; // Describes the search/placeholder image
+  image: string; // Specific image file path
   weight?: string; // e.g. "1 kg" or "500g"
 }
 
@@ -80,7 +80,7 @@ export const mockProducts: Product[] = [
     descEn: "Sliced or cubed beef liver, rich in iron and ready for quick pan-frying.",
     price: 380,
     category: "meats",
-    image: "beef_liver",
+    image: "/images/beef_tenderloin.png",
     weight: "1 kg"
   },
   {
@@ -102,18 +102,18 @@ export const mockProducts: Product[] = [
     descEn: "Premium whole leg of lamb, perfect for family gatherings and slow oven roasting.",
     price: 980,
     category: "meats",
-    image: "lamb_leg",
+    image: "/images/lamb_shoulder.png",
     weight: "2 kg"
   },
   {
     id: "m9",
-    nameAr: "ستيك كندوز متبل جاهز",
+    nameAr: "ستيك کندوز متبل جاهز",
     nameEn: "Marinated Veal Steak (Kandooz)",
     descAr: "شرائح لحم كندوز طرية متبلة بخلطتنا الخاصة الجاهزة للطهي الفوري.",
     descEn: "Tender veal slices marinated in our special blend, ready for immediate cooking.",
     price: 450,
     category: "meats",
-    image: "marinated_steak",
+    image: "/images/ribeye_steak.png",
     weight: "1 kg"
   },
   {
@@ -125,7 +125,7 @@ export const mockProducts: Product[] = [
     price: 360,
     category: "meats",
     isBestSeller: true,
-    image: "lamb_sausage",
+    image: "/images/lamb_chops.png",
     weight: "1 kg"
   },
   {
@@ -136,7 +136,7 @@ export const mockProducts: Product[] = [
     descEn: "Small, tender, lean beef cubes ideal for traditional Egyptian Kebab Halla stew.",
     price: 410,
     category: "meats",
-    image: "beef_cubes",
+    image: "/images/beef_shank.png",
     weight: "1 kg"
   },
   {
@@ -147,7 +147,7 @@ export const mockProducts: Product[] = [
     descEn: "Minced beef with balanced fat ratio (80/20) suitable for pasta bake, pastry, and kofta.",
     price: 350,
     category: "meats",
-    image: "minced_beef",
+    image: "/images/beef_roast.png",
     weight: "1 kg"
   },
   {
@@ -158,7 +158,7 @@ export const mockProducts: Product[] = [
     descEn: "Thick beef burger patties crafted from premium cuts with no soy additives.",
     price: 390,
     category: "meats",
-    image: "beef_burger",
+    image: "/images/ribeye_steak.png",
     weight: "800g (8 Patties)"
   },
   {
@@ -169,7 +169,7 @@ export const mockProducts: Product[] = [
     descEn: "Thinly sliced and tenderized beef cuts, perfect for crispy fried escalope.",
     price: 470,
     category: "meats",
-    image: "beef_escalope",
+    image: "/images/beef_tenderloin.png",
     weight: "1 kg"
   },
   {
@@ -180,7 +180,7 @@ export const mockProducts: Product[] = [
     descEn: "Premium French cut entrecote steak, sliced to perfection for pan-searing with butter and garlic.",
     price: 510,
     category: "meats",
-    image: "entrecote_steak",
+    image: "/images/ribeye_steak.png",
     weight: "900g"
   },
   {
@@ -191,7 +191,7 @@ export const mockProducts: Product[] = [
     descEn: "Beef kofta seasoned with onions and spices, shaped and ready to grill on skewers.",
     price: 340,
     category: "meats",
-    image: "beef_kofta",
+    image: "/images/meats_banner.png",
     weight: "1 kg"
   },
 
@@ -228,7 +228,7 @@ export const mockProducts: Product[] = [
     descEn: "Clean chicken thighs, ideal for stuffed chicken rollups or roasting with vegetables.",
     price: 160,
     category: "poultry",
-    image: "chicken_thighs",
+    image: "/images/chicken_breasts.png",
     weight: "1 kg"
   },
   {
@@ -239,7 +239,7 @@ export const mockProducts: Product[] = [
     descEn: "Whole chicken wings, excellent for crispy oven-baked buffalo wings.",
     price: 110,
     category: "poultry",
-    image: "chicken_wings",
+    image: "/images/whole_chicken.png",
     weight: "1 kg"
   },
   {
@@ -250,7 +250,7 @@ export const mockProducts: Product[] = [
     descEn: "Thoroughly washed chicken livers and gizzards, perfect for traditional rice tagines.",
     price: 130,
     category: "poultry",
-    image: "chicken_liver",
+    image: "/images/poultry_banner.png",
     weight: "1 kg"
   },
   {
@@ -261,7 +261,7 @@ export const mockProducts: Product[] = [
     descEn: "Finely minced chicken breast and thigh meat, ready for healthy chicken kofta or patties.",
     price: 210,
     category: "poultry",
-    image: "minced_chicken",
+    image: "/images/chicken_breasts.png",
     weight: "1 kg"
   },
   {
@@ -273,7 +273,7 @@ export const mockProducts: Product[] = [
     price: 320,
     category: "poultry",
     isBestSeller: true,
-    image: "fresh_duck",
+    image: "/images/whole_chicken.png",
     weight: "2.2 kg"
   },
   {
@@ -284,7 +284,7 @@ export const mockProducts: Product[] = [
     descEn: "Large whole turkey, fully cleaned and prepped, perfect for major holidays and feasts.",
     price: 850,
     category: "poultry",
-    image: "fresh_turkey",
+    image: "/images/recipe_saturday.png",
     weight: "5 kg"
   },
   {
@@ -295,7 +295,7 @@ export const mockProducts: Product[] = [
     descEn: "Tender boneless chicken thigh cubes marinated in yogurt, lemon, and spices for skewers.",
     price: 230,
     category: "poultry",
-    image: "shish_tawook",
+    image: "/images/chicken_breasts.png",
     weight: "1 kg"
   },
   {
@@ -306,7 +306,7 @@ export const mockProducts: Product[] = [
     descEn: "Fresh drumsticks marinated in mild spicy crispy spices, ready for golden frying.",
     price: 175,
     category: "poultry",
-    image: "chicken_drumsticks",
+    image: "/images/whole_chicken.png",
     weight: "1 kg"
   },
 
@@ -320,7 +320,7 @@ export const mockProducts: Product[] = [
     price: 75,
     category: "other",
     isBestSeller: true,
-    image: "natural_charcoal",
+    image: "/images/other_banner.png",
     weight: "3 kg"
   },
   {
@@ -331,7 +331,7 @@ export const mockProducts: Product[] = [
     descEn: "Exclusive seven-spice gourmet blend that gives grilled and stewed meats a rich aroma.",
     price: 45,
     category: "other",
-    image: "meat_spices",
+    image: "/images/other_banner.png",
     weight: "150g"
   },
   {
@@ -342,7 +342,7 @@ export const mockProducts: Product[] = [
     descEn: "Reusable stainless steel grilling skewers set (6 pcs) with wooden handles.",
     price: 120,
     category: "other",
-    image: "grilling_skewers",
+    image: "/images/other_banner.png",
     weight: "1 Set (6 Skewers)"
   },
   {
@@ -353,7 +353,7 @@ export const mockProducts: Product[] = [
     descEn: "Special seasoning mix for chicken and homemade burger patties for that restaurant taste.",
     price: 45,
     category: "other",
-    image: "poultry_spices",
+    image: "/images/other_banner.png",
     weight: "150g"
   },
   {
@@ -364,7 +364,7 @@ export const mockProducts: Product[] = [
     descEn: "Double-sided wire grilling basket with a long wooden handle, ideal for kofta and ribs.",
     price: 195,
     category: "other",
-    image: "grilling_basket",
+    image: "/images/other_banner.png",
     weight: "1 Piece"
   }
 ];
