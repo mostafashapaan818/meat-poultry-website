@@ -52,10 +52,10 @@ export default function Home() {
       <main className="flex-grow">
         
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-12 pb-20 sm:pb-24 lg:pt-20 lg:pb-32 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.12),transparent_70%)]">
-          {/* Seamless Luxury Logo Background Watermark (No Box Borders) */}
+        <section className="relative overflow-hidden pt-8 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-32 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.12),transparent_70%)]">
+          {/* Seamless Luxury Logo Background Watermark (Perfect Mobile & Desktop Position) */}
           <div 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[260px] h-[260px] sm:w-[480px] sm:h-[480px] lg:w-[580px] lg:h-[580px] pointer-events-none select-none z-0 overflow-hidden"
+            className="absolute top-16 sm:top-1/2 left-1/2 -translate-x-1/2 sm:-translate-y-1/2 w-[240px] h-[240px] sm:w-[480px] sm:h-[480px] lg:w-[580px] lg:h-[580px] pointer-events-none select-none z-0 overflow-hidden"
             style={{
               maskImage: "radial-gradient(circle at center, black 35%, transparent 75%)",
               WebkitMaskImage: "radial-gradient(circle at center, black 35%, transparent 75%)"
@@ -65,7 +65,7 @@ export default function Home() {
             <img
               src="/images/logo.png"
               alt=""
-              className="w-full h-full object-contain filter brightness-110 opacity-20 sm:opacity-25 mix-blend-screen"
+              className="w-full h-full object-contain filter brightness-110 opacity-15 sm:opacity-25 mix-blend-screen"
             />
           </div>
 
