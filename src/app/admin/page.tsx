@@ -187,13 +187,25 @@ export default function AdminDashboard() {
     return () => clearInterval(orderInterval);
   }, []);
 
-  // Handle Login with requested credentials (username: amr elhwary, password: amr9090)
+  // Handle Login with 5 authorized accounts
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      usernameInput.trim().toLowerCase() === "amr elhwary" &&
-      passwordInput === "amr9090"
-    ) {
+    const enteredUser = usernameInput.trim().toLowerCase();
+    const enteredPass = passwordInput.trim();
+
+    const AUTHORIZED_STAFF = [
+      { username: "amr elhwary", password: "amr9090" },
+      { username: "mostafa_sales", password: "dm_sales2026" },
+      { username: "chef_kitchen", password: "dm_kitchen2026" },
+      { username: "delivery_admin", password: "dm_express2026" },
+      { username: "staff_manager", password: "dm_staff8080" },
+    ];
+
+    const isValid = AUTHORIZED_STAFF.some(
+      (user) => user.username.toLowerCase() === enteredUser && user.password === enteredPass
+    );
+
+    if (isValid) {
       setIsLoggedIn(true);
       setLoginError("");
       localStorage.setItem("delicious_meats_admin_auth", "true");
