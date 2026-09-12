@@ -456,6 +456,10 @@ export default function AdminDashboard() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://deliciousmeats.vercel.app";
+    const invoiceUrl = `${currentOrigin}/invoice?id=${encodeURIComponent(order.id)}`;
+    const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(invoiceUrl)}`;
+
     const itemsRows = order.items
       .map(
         (item, idx) => `
@@ -478,9 +482,12 @@ export default function AdminDashboard() {
         <title>فاتورة طلب #${order.id} - ديليشس ميتس</title>
         <style>
           body { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 25px; color: #222; background: #fff; }
-          .header { text-align: center; border-bottom: 3px solid #D4AF37; padding-bottom: 15px; margin-bottom: 25px; }
-          .header h1 { margin: 0; color: #111; font-size: 26px; }
-          .header p { margin: 5px 0 0 0; color: #b8860b; font-weight: bold; }
+          .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #D4AF37; padding-bottom: 15px; margin-bottom: 25px; }
+          .header h1 { margin: 0; color: #111; font-size: 24px; }
+          .header p { margin: 5px 0 0 0; color: #b8860b; font-weight: bold; font-size: 14px; }
+          .qr-box { text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 12px; }
+          .qr-box img { width: 110px; height: 110px; display: block; margin: 0 auto 4px auto; }
+          .qr-box small { font-size: 10px; color: #475569; font-weight: bold; display: block; }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #fafafa; border: 1px solid #eee; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px; }
           .info-box p { margin: 4px 0; font-size: 14px; }
           .info-title { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 6px; }
@@ -494,8 +501,14 @@ export default function AdminDashboard() {
       </head>
       <body>
         <div class="header">
-          <h1>ديليشس ميتس - Delicious Meats</h1>
-          <p>تفاصيل إيصال الطلب / Customer Order Invoice</p>
+          <div>
+            <h1>🥩 ديليشس ميتس - Delicious Meats</h1>
+            <p>تفاصيل إيصال وفاتورة الطلب الرقمية / Customer Order Invoice</p>
+          </div>
+          <div class="qr-box">
+            <img src="${qrCodeApiUrl}" alt="QR Code Invoice #${order.id}" />
+            <small>📱 امسح الـ QR للفاتورة أونلاين</small>
+          </div>
         </div>
 
         <div class="info-grid">
@@ -535,7 +548,8 @@ export default function AdminDashboard() {
         </div>
 
         <div class="footer-note">
-          شكراً لتسوقكم من ديليشس ميتس - الخط الساخن: 19000 - info@deliciousmeats.me
+          شكراً لتسوقكم من ديليشس ميتس - الخط الساخن: 19000 - info@deliciousmeats.me<br/>
+          <small style="color: #999;">رابط الفاتورة الرقمية: ${invoiceUrl}</small>
         </div>
 
         <script>
