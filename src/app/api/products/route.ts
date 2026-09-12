@@ -16,9 +16,6 @@ interface CloudStore {
   deletedIds: string[];
 }
 
-// Global server memory cache across lambda invocations
-let globalStoreMemory: CloudStore | null = null;
-
 function normalizeProduct(item: any): Product {
   const rawAr = (item.nameAr || item.name_ar || "").toString().trim();
   const rawEn = (item.nameEn || item.name_en || "").toString().trim();
@@ -75,9 +72,9 @@ function computeMergedProducts(store: CloudStore): Product[] {
   return [...activeCustom, ...merged];
 }
 
-// Read cloud store state
+// Read cloud store state always directly from Cloud DB
 async function fetchCloudStore(): Promise<CloudStore> {
-  // 1. Check Cloud DB first
+  // 1. Check Cloud DB
   try {
     const res = await fetch(CLOUD_DB_PRODUCTS_URL, {
       cache: "no-store",
@@ -87,37 +84,28 @@ async function fetchCloudStore(): Promise<CloudStore> {
     if (res.ok) {
       const json = await res.json();
       if (json && json.data) {
-        const store: CloudStore = {
+        return {
           customProducts: Array.isArray(json.data.customProducts) ? json.data.customProducts : [],
           editedProducts: Array.isArray(json.data.editedProducts) ? json.data.editedProducts : [],
           deletedIds: Array.isArray(json.data.deletedIds) ? json.data.deletedIds : []
         };
-        globalStoreMemory = store;
-        return store;
       }
     }
   } catch (e) {
     console.warn("Cloud DB fetch store error:", e);
   }
 
-  // 2. Check global memory if cloud DB timeout
-  if (globalStoreMemory) {
-    return globalStoreMemory;
-  }
-
-  // 3. Disk fallback check
+  // 2. Disk fallback check
   try {
     if (fs.existsSync(LOCAL_FILE_PATH)) {
       const content = fs.readFileSync(LOCAL_FILE_PATH, "utf-8");
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        const store: CloudStore = {
+        return {
           customProducts: parsed.customProducts || [],
           editedProducts: parsed.editedProducts || [],
           deletedIds: parsed.deletedIds || []
         };
-        globalStoreMemory = store;
-        return store;
       }
     }
   } catch (e) {}
@@ -125,10 +113,8 @@ async function fetchCloudStore(): Promise<CloudStore> {
   return { customProducts: [], editedProducts: [], deletedIds: [] };
 }
 
-// Persist cloud store state
+// Persist cloud store state directly to Cloud DB
 async function saveCloudStore(store: CloudStore) {
-  globalStoreMemory = store;
-
   // Save disk cache if filesystem is writable
   try {
     const dir = path.dirname(LOCAL_FILE_PATH);
@@ -146,7 +132,7 @@ async function saveCloudStore(store: CloudStore) {
         "Cache-Control": "no-cache"
       },
       body: JSON.stringify({
-        name: "delicious-meats-products",
+        name: "delicious-meats-products-v2",
         data: store
       })
     });
