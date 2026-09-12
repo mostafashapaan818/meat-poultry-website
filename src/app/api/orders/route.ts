@@ -155,6 +155,26 @@ async function fetchAllOrders(): Promise<MockOrder[]> {
 
 // Persist orders array to Cloud DB & disk with retry loop
 async function persistOrdersToCloud(orders: MockOrder[]) {
+  // Keep latest 25 orders to ensure payload stays under 2KB limit for free cloud DB
+  const sanitizedOrders = orders.slice(0, 25).map((o) => ({
+    id: o.id,
+    customerName: o.customerName || "عميل",
+    phone: o.phone || "",
+    governorate: o.governorate || "",
+    area: o.area || "",
+    address: o.address || "",
+    items: (o.items || []).map((i) => ({
+      id: i.id,
+      nameAr: i.nameAr || i.nameEn || "منتج",
+      nameEn: i.nameEn || i.nameAr || "Product",
+      price: Number(i.price || 0),
+      quantity: Number(i.quantity || 1)
+    })),
+    totalValue: Number(o.totalValue || 0),
+    status: o.status || "new",
+    createdAt: o.createdAt || new Date().toISOString()
+  }));
+
   // Disk fallback if filesystem is writable
   try {
     const fs = require("fs");
@@ -162,7 +182,7 @@ async function persistOrdersToCloud(orders: MockOrder[]) {
     const filePath = path.join(process.cwd(), "src/data/orders_store.json");
     const dirPath = path.dirname(filePath);
     if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
-    fs.writeFileSync(filePath, JSON.stringify({ orders }, null, 2), "utf-8");
+    fs.writeFileSync(filePath, JSON.stringify({ orders: sanitizedOrders }, null, 2), "utf-8");
   } catch (e) {}
 
   // Retry Cloud DB PUT up to 3 times
@@ -179,7 +199,7 @@ async function persistOrdersToCloud(orders: MockOrder[]) {
         },
         body: JSON.stringify({
           name: "delicious-meats-orders",
-          data: { orders }
+          data: { orders: sanitizedOrders }
         }),
         signal: controller.signal
       });
