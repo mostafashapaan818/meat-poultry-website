@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
-import { CheckCircle2, ChevronRight, ChevronLeft, CreditCard, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronLeft, CreditCard, ShoppingBag, ArrowLeft, ArrowRight, Clock, Utensils, Truck, Sparkles } from "lucide-react";
 
 // List of allowed delivery governorates (Cairo and Giza only)
 const GOVERNORATES = [
@@ -52,6 +52,160 @@ const checkIsFreeArea = (selectedArea: string) => {
   return freeKeys.some(key => selectedArea.toLowerCase().includes(key));
 };
 
+// Live 24-Hour Decreasing Countdown Bar for Checkout Success Screen
+function CheckoutCountdownBar({ createdAt, language }: { createdAt: string; language: string }) {
+  const [timeLeft, setTimeLeft] = useState<{
+    hours: number;
+    minutes: number;
+    seconds: number;
+    percentRemaining: number;
+    isExpired: boolean;
+  }>({ hours: 24, minutes: 0, seconds: 0, percentRemaining: 100, isExpired: false });
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const orderTime = createdAt ? new Date(createdAt).getTime() : Date.now();
+      const deadline = orderTime + 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const diff = deadline - now;
+
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, percentRemaining: 0, isExpired: true });
+        return;
+      }
+
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      const total24h = 24 * 60 * 60 * 1000;
+      const pct = Math.max(0, Math.min(100, (diff / total24h) * 100));
+
+      setTimeLeft({ hours: h, minutes: m, seconds: s, percentRemaining: pct, isExpired: false });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  return (
+    <div className="bg-gradient-to-br from-dark-bg/90 to-dark-surface border border-primary/30 rounded-3xl p-5 text-start space-y-4 shadow-xl relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 animate-pulse">
+            <Clock className="h-5 w-5" />
+          </div>
+          <div>
+            <h4 className="text-xs sm:text-sm font-black text-white">
+              {language === "ar" ? "الوقت المتبقي المتوقع للتوصيل (خلال 24 ساعة)" : "Estimated Delivery Countdown (within 24 hours)"}
+            </h4>
+            <p className="text-[11px] text-dark-text-muted mt-0.5">
+              {language === "ar" ? "التوصيل يتم خلال 24 ساعة كحد أقصى من موعد إرسال الطلب" : "Delivered within 24 hours max"}
+            </p>
+          </div>
+        </div>
+
+        {!timeLeft.isExpired ? (
+          <div className="flex items-center gap-1.5 self-center sm:self-auto dir-ltr">
+            <div className="bg-dark-bg border border-primary/40 px-2.5 py-1 rounded-xl text-center min-w-[44px]">
+              <span className="text-base font-black text-primary block leading-none">
+                {String(timeLeft.hours).padStart(2, "0")}
+              </span>
+              <span className="text-[8px] text-gray-400 font-bold">ساعة</span>
+            </div>
+            <span className="text-primary font-bold text-base animate-ping">:</span>
+            <div className="bg-dark-bg border border-primary/40 px-2.5 py-1 rounded-xl text-center min-w-[44px]">
+              <span className="text-base font-black text-primary block leading-none">
+                {String(timeLeft.minutes).padStart(2, "0")}
+              </span>
+              <span className="text-[8px] text-gray-400 font-bold">دقيقة</span>
+            </div>
+            <span className="text-primary font-bold text-base animate-ping">:</span>
+            <div className="bg-dark-bg border border-primary/40 px-2.5 py-1 rounded-xl text-center min-w-[44px]">
+              <span className="text-base font-black text-primary block leading-none">
+                {String(timeLeft.seconds).padStart(2, "0")}
+              </span>
+              <span className="text-[8px] text-gray-400 font-bold">ثانية</span>
+            </div>
+          </div>
+        ) : (
+          <span className="text-xs font-black px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            {language === "ar" ? "قريب جداً من الوصول 🎉" : "Arriving Shortly 🎉"}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-1 relative z-10">
+        <div className="w-full bg-dark-bg/80 border border-dark-border/80 h-3 rounded-full overflow-hidden p-0.5">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-primary to-amber-500 transition-all duration-1000 shadow-md shadow-primary/20 relative"
+            style={{ width: `${timeLeft.percentRemaining}%` }}
+          >
+            <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+          </div>
+        </div>
+        <div className="flex justify-between text-[10px] text-dark-text-muted font-bold px-1">
+          <span>{language === "ar" ? "تأكيد الطلب" : "Order Placed"}</span>
+          <span className="text-primary font-extrabold">{Math.round(timeLeft.percentRemaining)}% {language === "ar" ? "متبقي من مهلة 24h" : "remaining"}</span>
+          <span>{language === "ar" ? "الوصول النهائي" : "Arrival"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Interactive 4-Stage Status Stepper for Checkout Success Screen
+function CheckoutStatusPipeline({ language }: { language: string }) {
+  const steps = [
+    { id: "new", titleAr: "تم استلام الطلب", titleEn: "Order Placed", icon: ShoppingBag, active: true },
+    { id: "preparing", titleAr: "قيد التجهيز والتقطيع", titleEn: "Butchering & Prep", icon: Utensils, active: false },
+    { id: "delivering", titleAr: "في الطريق للتوصيل", titleEn: "Out for Delivery", icon: Truck, active: false },
+    { id: "delivered", titleAr: "تم التسليم بنجاح", titleEn: "Delivered", icon: CheckCircle2, active: false },
+  ];
+
+  return (
+    <div className="space-y-4 bg-dark-bg/60 border border-dark-border/80 rounded-3xl p-5 text-start">
+      <div className="flex items-center justify-between border-b border-dark-border/60 pb-3">
+        <h4 className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span>{language === "ar" ? "شريط مراحل وحالة الطلب التفاعلي" : "Interactive Order Pipeline"}</span>
+        </h4>
+        <span className="text-xs font-extrabold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/30">
+          المرحلة 1 من 4
+        </span>
+      </div>
+
+      <div className="relative py-2">
+        <div className="absolute top-7 left-6 right-6 sm:left-10 sm:right-10 h-1.5 bg-dark-bg border border-dark-border rounded-full z-0" />
+        
+        <div className="grid grid-cols-4 gap-2 relative z-10">
+          {steps.map((st, idx) => {
+            const Icon = st.icon;
+            const isActive = idx === 0;
+
+            return (
+              <div key={st.id} className="flex flex-col items-center text-center space-y-1.5">
+                <div
+                  className={`h-10 w-10 sm:h-12 sm:w-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 ${
+                    isActive
+                      ? "bg-primary text-dark-bg border-primary shadow-lg shadow-primary/30 scale-110 ring-4 ring-primary/20"
+                      : "bg-dark-surface text-gray-500 border-dark-border"
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 stroke-[2.5] ${isActive ? "animate-bounce" : ""}`} />
+                </div>
+                <span className={`text-[10px] sm:text-xs font-black block ${isActive ? "text-primary font-bold" : "text-gray-500"}`}>
+                  {language === "ar" ? st.titleAr : st.titleEn}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const { t, language, dir } = useLanguage();
   const { cart, subtotal, deliveryFee, total, clearCart } = useCart();
@@ -77,6 +231,7 @@ export default function CheckoutPage() {
     area: string;
     address: string;
     name: string;
+    createdAt: string;
   } | null>(null);
 
   // Validation logic
@@ -120,14 +275,17 @@ export default function CheckoutPage() {
     const randRef = `DM-${Math.floor(100000 + Math.random() * 900000)}`;
     setOrderRef(randRef);
 
+    const createdAtIso = new Date().toISOString();
     const isFree = checkIsFreeArea(area);
+
     setLastOrderDetails({
       orderRef: randRef,
       isFreeDelivery: isFree,
       governorate,
       area,
       address,
-      name
+      name,
+      createdAt: createdAtIso
     });
 
     const newOrder = {
@@ -146,7 +304,7 @@ export default function CheckoutPage() {
       })),
       totalValue: total,
       status: "new",
-      createdAt: new Date().toISOString()
+      createdAt: createdAtIso
     };
 
     // Save order details to localstorage
@@ -154,6 +312,7 @@ export default function CheckoutPage() {
       const savedOrders = JSON.parse(localStorage.getItem("delicious_meats_orders") || "[]");
       savedOrders.unshift(newOrder);
       localStorage.setItem("delicious_meats_orders", JSON.stringify(savedOrders));
+      localStorage.setItem("dm_orders", JSON.stringify(savedOrders));
     } catch (err) {
       console.error(err);
     }
@@ -190,8 +349,8 @@ export default function CheckoutPage() {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-grow py-16 bg-dark-bg flex items-center justify-center">
-          <div className="max-w-md w-full mx-auto px-6 py-10 bg-dark-surface border border-dark-border rounded-3xl text-center space-y-6 shadow-2xl animate-in fade-in duration-300">
+        <main className="flex-grow py-12 bg-dark-bg flex items-center justify-center">
+          <div className="max-w-2xl w-full mx-auto px-6 py-10 bg-dark-surface border border-dark-border rounded-3xl text-center space-y-6 shadow-2xl animate-in fade-in duration-300">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto stroke-[2.5] animate-bounce" />
             
             <div className="space-y-2">
@@ -201,14 +360,15 @@ export default function CheckoutPage() {
               </p>
             </div>
 
-            <div className="bg-dark-bg border border-dark-border/80 rounded-2xl p-4 divide-y divide-dark-border/40 text-xs">
+            {/* Order Reference Details */}
+            <div className="bg-dark-bg border border-dark-border/80 rounded-2xl p-4 divide-y divide-dark-border/40 text-xs text-start">
               <div className="py-2.5 flex items-center justify-between">
                 <span className="text-dark-text-muted">{t("orderRef")}</span>
                 <span className="font-extrabold text-primary text-sm">#{lastOrderDetails.orderRef}</span>
               </div>
               <div className="py-2.5 flex items-center justify-between">
                 <span className="text-dark-text-muted">المنطقة والعنوان:</span>
-                <span className="font-bold text-white text-right max-w-[200px] truncate">{lastOrderDetails.governorate} - {lastOrderDetails.area}</span>
+                <span className="font-bold text-white text-right max-w-[250px] truncate">{lastOrderDetails.governorate} - {lastOrderDetails.area}</span>
               </div>
               <div className="py-2.5 flex items-center justify-between">
                 <span className="text-dark-text-muted">حالة التوصيل:</span>
@@ -217,6 +377,27 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
+
+            {/* Dynamic Motion Visual Banner */}
+            <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/30 rounded-2xl p-4 flex items-center gap-4 text-start">
+              <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/40 flex items-center justify-center text-primary text-xl flex-shrink-0 animate-pulse">
+                ✨
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-white">
+                  {language === "ar" ? "تم استلام طلبك بنجاح وجاري مراجعة وتجهيز الوجبة 🔪" : "Order received and being routed to expert butchers"}
+                </h4>
+                <p className="text-[11px] text-dark-text-muted mt-0.5">
+                  {language === "ar" ? "شاهد العد التنازلي التفاعلي ومراحل التوصيل أدناه." : "View live countdown and pipeline progress below."}
+                </p>
+              </div>
+            </div>
+
+            {/* Live 24-Hour Countdown Bar (Embedded Directly) */}
+            <CheckoutCountdownBar createdAt={lastOrderDetails.createdAt} language={language} />
+
+            {/* Interactive 4-Stage Order Pipeline Stepper (Embedded Directly) */}
+            <CheckoutStatusPipeline language={language} />
 
             {/* QR Code & Digital Invoice Button */}
             <div className="bg-dark-bg/80 border border-dark-border/80 rounded-2xl p-4 text-center space-y-2">

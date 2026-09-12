@@ -149,6 +149,61 @@
               <div class="ref" data-i18n="cashOnDelivery">نقداً عند الاستلام</div>
             </div>
 
+            <!-- Motion Visual Banner -->
+            <div style="background: rgba(225,29,72,0.1); border: 1px solid rgba(225,29,72,0.3); border-radius: 16px; padding: 14px 18px; margin-top: 1.5rem; text-align: right; display: flex; align-items: center; gap: 12px;">
+              <div style="font-size: 1.5rem;">✨</div>
+              <div>
+                <div style="font-weight: 900; color: #fff; font-size: 0.9rem;">تم استلام طلبك بنجاح وجاري مراجعة وتجهيز الوجبة 🔪</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 2px;">شاهد العد التنازلي المباشر ومراحل التوصيل أدناه.</div>
+              </div>
+            </div>
+
+            <!-- Embedded 24-Hour Countdown Box -->
+            <div id="vanilla-countdown-box" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(225,29,72,0.3); border-radius: 16px; padding: 16px; margin-top: 1.5rem; text-align: right;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="font-weight: 900; color: #fff; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                  <span>⏰</span> <span>الوقت المتبقي المتوقع للتوصيل (خلال 24 ساعة):</span>
+                </div>
+                <div id="vanilla-countdown-clock" style="font-family: monospace; font-weight: 900; color: #e11d48; font-size: 1.1rem; background: #000; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(225,29,72,0.4); direction: ltr;">
+                  24:00:00
+                </div>
+              </div>
+              <div style="background: #1f2937; height: 12px; border-radius: 999px; overflow: hidden; border: 1px solid #374151;">
+                <div id="vanilla-countdown-progress" style="width: 100%; height: 100%; background: linear-gradient(90deg, #10b981, #e11d48); transition: width 1s linear;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #9ca3af; margin-top: 6px; font-weight: bold;">
+                <span>تأكيد الطلب</span>
+                <span id="vanilla-countdown-pct" style="color: #e11d48;">100% متبقي</span>
+                <span>الوصول النهائي (24h)</span>
+              </div>
+            </div>
+
+            <!-- Embedded Interactive 4-Stage Stepper -->
+            <div style="background: rgba(17, 24, 39, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; margin-top: 1.5rem; text-align: right;">
+              <div style="font-weight: 900; color: #fff; font-size: 0.85rem; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>✨ شريط مراحل وحالة الطلب التفاعلي</span>
+                <span style="color: #e11d48; font-size: 0.75rem; background: rgba(225,29,72,0.1); padding: 2px 10px; border-radius: 999px; border: 1px solid rgba(225,29,72,0.3);">المرحلة 1 من 4</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                  <div style="width: 42px; height: 42px; border-radius: 12px; background: #e11d48; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; box-shadow: 0 4px 12px rgba(225,29,72,0.4);">🛍️</div>
+                  <span style="font-size: 0.7rem; font-weight: 900; color: #e11d48;">تم الاستلام</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.5;">
+                  <div style="width: 42px; height: 42px; border-radius: 12px; background: #374151; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🥩</div>
+                  <span style="font-size: 0.7rem; font-weight: 700; color: #9ca3af;">قيد التجهيز</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.5;">
+                  <div style="width: 42px; height: 42px; border-radius: 12px; background: #374151; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🚚</div>
+                  <span style="font-size: 0.7rem; font-weight: 700; color: #9ca3af;">جاري التوصيل</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.5;">
+                  <div style="width: 42px; height: 42px; border-radius: 12px; background: #374151; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🎉</div>
+                  <span style="font-size: 0.7rem; font-weight: 700; color: #9ca3af;">تم التسليم</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Dynamic WhatsApp Inquiry button -->
             <div id="whatsapp-btn-container" style="margin-top:1.5rem"></div>
 
@@ -459,6 +514,26 @@
         `;
 
         waContainer.innerHTML = waBtnHTML;
+
+        // Live 24-hour countdown ticker interval
+        const createdTime = Date.now();
+        const deadline = createdTime + 24 * 60 * 60 * 1000;
+        setInterval(() => {
+          const diff = deadline - Date.now();
+          if (diff <= 0) return;
+          const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+          const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+          const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+          const pct = Math.max(0, Math.min(100, (diff / (24 * 60 * 60 * 1000)) * 100));
+
+          const clockEl = document.getElementById('vanilla-countdown-clock');
+          const barEl = document.getElementById('vanilla-countdown-progress');
+          const pctEl = document.getElementById('vanilla-countdown-pct');
+
+          if (clockEl) clockEl.textContent = `${h}:${m}:${s}`;
+          if (barEl) barEl.style.width = `${pct}%`;
+          if (pctEl) pctEl.textContent = `${Math.round(pct)}% متبقي`;
+        }, 1000);
 
         document.getElementById('checkout-form-state').classList.add('hide');
         document.getElementById('success-state').classList.remove('hide');
