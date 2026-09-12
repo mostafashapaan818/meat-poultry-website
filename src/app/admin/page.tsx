@@ -10,8 +10,55 @@ import { DailyRecipe, getStoredDailyRecipes, saveStoredDailyRecipes } from "@/da
 import { 
   Lock, User, LogOut, CheckCircle, Package, ListOrdered, 
   Trash2, Edit, Plus, Phone, MapPin, X, ChefHat, Sparkles, Clock, Users, BookOpen, UtensilsCrossed, Printer, FileText,
-  Eye, EyeOff
+  Eye, EyeOff, Bell, Volume2
 } from "lucide-react";
+
+// Web Audio API Chime Sound Generator (Double Tone Bell Alert)
+const playOrderChime = () => {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    // Tone 1: E5 (659.25 Hz)
+    const osc1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(659.25, ctx.currentTime);
+    g1.gain.setValueAtTime(0.35, ctx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc1.connect(g1);
+    g1.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.35);
+
+    // Tone 2: A5 (880 Hz)
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+    g2.gain.setValueAtTime(0.45, ctx.currentTime + 0.15);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.75);
+    osc2.connect(g2);
+    g2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.15);
+    osc2.stop(ctx.currentTime + 0.75);
+  } catch (e) {
+    console.error("Audio chime error:", e);
+  }
+};
+
+// Web Notification API Helper
+const triggerWebNotification = (orderName: string, orderRef: string, total: number) => {
+  if (typeof window !== "undefined" && "Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification(`🔔 طلب جديد في ديليشس ميتس! #${orderRef}`, {
+        body: `العميل: ${orderName}\nالإجمالي: ${total} ج.م`,
+        icon: "/images/logo_v2.png",
+      });
+    }
+  }
+};
 
 interface MockOrder {
   id: string;
@@ -95,11 +142,16 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [dailyRecipes, setDailyRecipes] = useState<DailyRecipe[]>([]);
   
+  // Real-time Notification Alert States & Refs
+  const [newOrderAlert, setNewOrderAlert] = useState<MockOrder | null>(null);
+  const knownOrderIdsRef = React.useRef<Set<string>>(new Set());
+  const isOrdersInitializedRef = React.useRef<boolean>(false);
+
   // Modals / Form states
   const [showProductModal, setShowProductModal] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  
+
   // Product Form State
   const [prodNameAr, setProdNameAr] = useState("");
   const [prodNameEn, setProdNameEn] = useState("");
@@ -185,6 +237,21 @@ export default function AdminDashboard() {
             const merged = Array.from(map.values()).sort(
               (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             );
+
+            // Trigger notification sound & visual alert if new order arrives
+            if (isOrdersInitializedRef.current) {
+              merged.forEach((o) => {
+                if (!knownOrderIdsRef.current.has(o.id) && o.status === "new") {
+                  playOrderChime();
+                  setNewOrderAlert(o);
+                  triggerWebNotification(o.customerName, o.id, o.totalValue);
+                }
+              });
+            }
+
+            // Mark all orders as known
+            merged.forEach((o) => knownOrderIdsRef.current.add(o.id));
+            isOrdersInitializedRef.current = true;
 
             try {
               localStorage.setItem("delicious_meats_orders", JSON.stringify(merged));
@@ -886,8 +953,46 @@ export default function AdminDashboard() {
 
   // Render Dashboard
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
       
+      {/* Real-time Toast Alert Notification when new order arrives */}
+      {newOrderAlert && (
+        <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-800 text-white p-4 sm:p-5 rounded-2xl shadow-2xl border-2 border-emerald-300/80 flex items-center justify-between gap-4 animate-bounce">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-white/20 rounded-xl shrink-0">
+              <Bell className="h-6 w-6 text-white animate-pulse" />
+            </div>
+            <div className="text-right space-y-0.5">
+              <h4 className="font-black text-sm text-white">🔔 طلب جديد وارد الآن!</h4>
+              <p className="text-xs text-emerald-100 font-bold">
+                طلب #{newOrderAlert.id} • العميل: {newOrderAlert.customerName}
+              </p>
+              <p className="text-[11px] text-emerald-200">
+                الإجمالي: {newOrderAlert.totalValue} ج.م | {newOrderAlert.governorate} - {newOrderAlert.area}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <button
+              onClick={() => {
+                playOrderChime();
+                setNewOrderAlert(null);
+                setActiveTab("orders");
+              }}
+              className="px-3 py-1.5 rounded-lg bg-white text-emerald-900 font-black text-xs hover:bg-emerald-100 transition-colors shadow-md"
+            >
+              معاينة ✓
+            </button>
+            <button
+              onClick={() => setNewOrderAlert(null)}
+              className="text-[10px] text-emerald-200 hover:text-white underline text-center"
+            >
+              إغلاق ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Mini Admin Nav Header */}
       <header className="sticky top-0 z-40 w-full bg-[#08080A] border-b border-dark-border px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -901,7 +1006,21 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => {
+                playOrderChime();
+                if (typeof window !== "undefined" && "Notification" in window) {
+                  Notification.requestPermission();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-xs font-bold text-primary hover:bg-primary/20 transition-all duration-200"
+              title="اضغط هنا لتفعيل إشعارات الصوت والمتصفح عند وصول أي طلب جديد"
+            >
+              <Bell className="h-4 w-4 animate-pulse text-primary" />
+              <span className="hidden sm:inline">تفعيل إشعارات الصوت 🔔</span>
+            </button>
+
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200"

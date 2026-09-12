@@ -21,6 +21,9 @@
         </div>
       </div>
       <div class="dash-actions">
+        <button class="btn btn-outline btn-sm" onclick="playOrderChime(); triggerWebNotification('اختبار إشعار الطلبات', 'صوت إشعار الطلبات الجديدة يعمل بنجاح 🔔'); showToast('🔔 تم تشغيل صوت الإشعار بنجاح', 'success');" style="border-color:var(--gold);color:var(--gold);font-weight:bold;">
+          🔔 تجربة الصوت
+        </button>
         <button class="lang-btn" onclick="i18n.toggleLang()">
           🌐 <span data-i18n="langToggle">English</span>
         </button>
@@ -203,6 +206,51 @@
       });
     });
 
+    // ── State & Real-time Notification System ──
+    let orders   = [];
+    let products = [];
+    let knownOrderIds = new Set();
+    let isInitialLoad = true;
+
+    function playOrderChime() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+
+        const playTone = (freq, startTime, duration) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + startTime);
+          osc.stop(ctx.currentTime + startTime + duration);
+        };
+
+        playTone(659.25, 0, 0.25);   // E5
+        playTone(880.00, 0.2, 0.45);  // A5
+      } catch (err) {
+        console.warn('Audio play failed:', err);
+      }
+    }
+
+    function triggerWebNotification(title, body) {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: '/logo_v2.png' });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(title, { body, icon: '/logo_v2.png' });
+          }
+        });
+      }
+    }
+
     async function fetchLiveOrders() {
       try {
         const res = await fetch('/api/orders');
@@ -238,7 +286,30 @@
               map.set(o.id, existing ? { ...existing, ...o } : o);
             });
 
-            orders = Array.from(map.values()).sort((a,b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
+            const merged = Array.from(map.values()).sort((a,b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
+
+            // Track new orders for audio alert & notifications
+            let newOrdersFound = [];
+            merged.forEach(o => {
+              if (!knownOrderIds.has(o.id)) {
+                knownOrderIds.add(o.id);
+                if (!isInitialLoad) {
+                  newOrdersFound.push(o);
+                }
+              }
+            });
+
+            if (isInitialLoad) {
+              isInitialLoad = false;
+            } else if (newOrdersFound.length > 0) {
+              playOrderChime();
+              newOrdersFound.forEach(o => {
+                showToast(`🎉 طلب جديد وصل! رقم #${o.id} - ${o.customer_name} (${o.total.toLocaleString()} ج.م)`, 'success', 7000);
+                triggerWebNotification('🔔 طلب جديد في ديليشس ميتس!', `وصل طلب جديد بقيمة ${o.total.toLocaleString()} ج.م من ${o.customer_name}`);
+              });
+            }
+
+            orders = merged;
             localStorage.setItem('dm_orders', JSON.stringify(orders));
             localStorage.setItem('delicious_meats_orders', JSON.stringify(orders));
             renderOrders();
