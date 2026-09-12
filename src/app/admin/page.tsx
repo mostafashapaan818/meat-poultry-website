@@ -13,36 +13,81 @@ import {
   Eye, EyeOff, Bell, Volume2
 } from "lucide-react";
 
-// Web Audio API Chime Sound Generator (Double Tone Bell Alert)
+// Global AudioContext singleton for mobile WebKit & browser autoplay policies
+let globalAudioCtx: AudioContext | null = null;
+
+const unlockAudioContext = () => {
+  if (typeof window === "undefined") return null;
+  if (!globalAudioCtx) {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioCtx) {
+      globalAudioCtx = new AudioCtx();
+    }
+  }
+  if (globalAudioCtx && globalAudioCtx.state === "suspended") {
+    globalAudioCtx.resume().catch(() => {});
+  }
+  if (typeof window !== "undefined" && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+    Notification.requestPermission().catch(() => {});
+  }
+  return globalAudioCtx;
+};
+
+// Web Audio API Chime Sound Generator (Triple Loud Bell Alert + Mobile Haptic Vibration)
 const playOrderChime = () => {
   try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    // 1. Mobile Haptic Vibration Alert
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate([400, 150, 400, 150, 600]);
+      } catch (e) {}
+    }
+
+    // 2. Audio Context Sound Playback
+    const ctx = unlockAudioContext();
+    if (!ctx) return;
+
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
 
     // Tone 1: E5 (659.25 Hz)
     const osc1 = ctx.createOscillator();
     const g1 = ctx.createGain();
     osc1.type = "sine";
-    osc1.frequency.setValueAtTime(659.25, ctx.currentTime);
-    g1.gain.setValueAtTime(0.35, ctx.currentTime);
-    g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc1.frequency.setValueAtTime(659.25, now);
+    g1.gain.setValueAtTime(0.5, now);
+    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
     osc1.connect(g1);
     g1.connect(ctx.destination);
-    osc1.start(ctx.currentTime);
-    osc1.stop(ctx.currentTime + 0.35);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
 
     // Tone 2: A5 (880 Hz)
     const osc2 = ctx.createOscillator();
     const g2 = ctx.createGain();
     osc2.type = "sine";
-    osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
-    g2.gain.setValueAtTime(0.45, ctx.currentTime + 0.15);
-    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.75);
+    osc2.frequency.setValueAtTime(880, now + 0.15);
+    g2.gain.setValueAtTime(0.6, now + 0.15);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
     osc2.connect(g2);
     g2.connect(ctx.destination);
-    osc2.start(ctx.currentTime + 0.15);
-    osc2.stop(ctx.currentTime + 0.75);
+    osc2.start(now + 0.15);
+    osc2.stop(now + 0.75);
+
+    // Tone 3: C#6 (1108.73 Hz) Loud Alert Peak
+    const osc3 = ctx.createOscillator();
+    const g3 = ctx.createGain();
+    osc3.type = "triangle";
+    osc3.frequency.setValueAtTime(1108.73, now + 0.35);
+    g3.gain.setValueAtTime(0.6, now + 0.35);
+    g3.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+    osc3.connect(g3);
+    g3.connect(ctx.destination);
+    osc3.start(now + 0.35);
+    osc3.stop(now + 0.95);
   } catch (e) {
     console.error("Audio chime error:", e);
   }
@@ -55,6 +100,15 @@ const triggerWebNotification = (orderName: string, orderRef: string, total: numb
       new Notification(`🔔 طلب جديد في ديليشس ميتس! #${orderRef}`, {
         body: `العميل: ${orderName}\nالإجمالي: ${total} ج.م`,
         icon: "/images/logo_v2.png",
+      });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(`🔔 طلب جديد في ديليشس ميتس! #${orderRef}`, {
+            body: `العميل: ${orderName}\nالإجمالي: ${total} ج.م`,
+            icon: "/images/logo_v2.png",
+          });
+        }
       });
     }
   }
@@ -272,6 +326,13 @@ export default function AdminDashboard() {
 
   // Load state on mount and start 3-second live polling
   useEffect(() => {
+    // Unlock AudioContext and request notification permissions on user interaction (touch/click)
+    const handleUserInteraction = () => {
+      unlockAudioContext();
+    };
+    window.addEventListener("touchstart", handleUserInteraction, { passive: true });
+    window.addEventListener("click", handleUserInteraction, { passive: true });
+
     // Auth Check
     const authStatus = localStorage.getItem("delicious_meats_admin_auth");
     if (authStatus === "true") {
@@ -308,7 +369,11 @@ export default function AdminDashboard() {
     };
     loadRecipes();
 
-    return () => clearInterval(orderInterval);
+    return () => {
+      clearInterval(orderInterval);
+      window.removeEventListener("touchstart", handleUserInteraction);
+      window.removeEventListener("click", handleUserInteraction);
+    };
   }, []);
 
   // Handle Login with 5 authorized accounts
