@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { defaultDailyRecipes, DailyRecipe } from "@/data/dailyRecipes";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Dedicated persistent Cloud DB endpoint for recipes
 const CLOUD_DB_RECIPES_URL = "https://api.restful-api.dev/objects/ff808181a067127101a095ed0c0601d4";
 

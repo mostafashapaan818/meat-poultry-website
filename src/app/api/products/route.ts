@@ -3,6 +3,9 @@ import { mockProducts, Product } from "@/data/products";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Dedicated persistent Cloud DB endpoint for products
 const CLOUD_DB_PRODUCTS_URL = "https://api.restful-api.dev/objects/ff808181a067127101a095eca86001d3";
 const LOCAL_FILE_PATH = path.join(process.cwd(), "src/data/products_store.json");
