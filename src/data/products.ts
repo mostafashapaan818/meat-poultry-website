@@ -386,7 +386,79 @@ export const mockProducts: Product[] = [
     category: "poultry",
     image: "/images/chicken_breasts.png",
     weight: "1 كجم"
-  }
+  },
+
+  // ---------------------------------------------------------
+  // 20 منتج جديد لحوم (غير معروض - سعر 0)
+  // ---------------------------------------------------------
+  { id: "m_new_1", nameAr: "منتج لحوم جديد 1", nameEn: "New Meat Cut 1", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_2", nameAr: "منتج لحوم جديد 2", nameEn: "New Meat Cut 2", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_3", nameAr: "منتج لحوم جديد 3", nameEn: "New Meat Cut 3", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_4", nameAr: "منتج لحوم جديد 4", nameEn: "New Meat Cut 4", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_5", nameAr: "منتج لحوم جديد 5", nameEn: "New Meat Cut 5", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_6", nameAr: "منتج لحوم جديد 6", nameEn: "New Meat Cut 6", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_7", nameAr: "منتج لحوم جديد 7", nameEn: "New Meat Cut 7", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_8", nameAr: "منتج لحوم جديد 8", nameEn: "New Meat Cut 8", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_9", nameAr: "منتج لحوم جديد 9", nameEn: "New Meat Cut 9", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_10", nameAr: "منتج لحوم جديد 10", nameEn: "New Meat Cut 10", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_11", nameAr: "منتج لحوم جديد 11", nameEn: "New Meat Cut 11", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_12", nameAr: "منتج لحوم جديد 12", nameEn: "New Meat Cut 12", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_13", nameAr: "منتج لحوم جديد 13", nameEn: "New Meat Cut 13", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_14", nameAr: "منتج لحوم جديد 14", nameEn: "New Meat Cut 14", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_15", nameAr: "منتج لحوم جديد 15", nameEn: "New Meat Cut 15", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_16", nameAr: "منتج لحوم جديد 16", nameEn: "New Meat Cut 16", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_17", nameAr: "منتج لحوم جديد 17", nameEn: "New Meat Cut 17", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_18", nameAr: "منتج لحوم جديد 18", nameEn: "New Meat Cut 18", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_19", nameAr: "منتج لحوم جديد 19", nameEn: "New Meat Cut 19", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+  { id: "m_new_20", nameAr: "منتج لحوم جديد 20", nameEn: "New Meat Cut 20", descAr: "", descEn: "", price: 0, category: "meats", isAvailable: false, image: "/images/ribeye_steak.png", weight: "1 كجم" },
+
+  // ---------------------------------------------------------
+  // 20 منتج جديد دواجن (غير معروض - سعر 0)
+  // ---------------------------------------------------------
+  { id: "p_new_1", nameAr: "منتج دواجن جديد 1", nameEn: "New Poultry Item 1", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_2", nameAr: "منتج دواجن جديد 2", nameEn: "New Poultry Item 2", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_3", nameAr: "منتج دواجن جديد 3", nameEn: "New Poultry Item 3", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_4", nameAr: "منتج دواجن جديد 4", nameEn: "New Poultry Item 4", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_5", nameAr: "منتج دواجن جديد 5", nameEn: "New Poultry Item 5", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_6", nameAr: "منتج دواجن جديد 6", nameEn: "New Poultry Item 6", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_7", nameAr: "منتج دواجن جديد 7", nameEn: "New Poultry Item 7", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_8", nameAr: "منتج دواجن جديد 8", nameEn: "New Poultry Item 8", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_9", nameAr: "منتج دواجن جديد 9", nameEn: "New Poultry Item 9", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_10", nameAr: "منتج دواجن جديد 10", nameEn: "New Poultry Item 10", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_11", nameAr: "منتج دواجن جديد 11", nameEn: "New Poultry Item 11", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_12", nameAr: "منتج دواجن جديد 12", nameEn: "New Poultry Item 12", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_13", nameAr: "منتج دواجن جديد 13", nameEn: "New Poultry Item 13", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_14", nameAr: "منتج دواجن جديد 14", nameEn: "New Poultry Item 14", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_15", nameAr: "منتج دواجن جديد 15", nameEn: "New Poultry Item 15", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_16", nameAr: "منتج دواجن جديد 16", nameEn: "New Poultry Item 16", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_17", nameAr: "منتج دواجن جديد 17", nameEn: "New Poultry Item 17", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_18", nameAr: "منتج دواجن جديد 18", nameEn: "New Poultry Item 18", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_19", nameAr: "منتج دواجن جديد 19", nameEn: "New Poultry Item 19", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+  { id: "p_new_20", nameAr: "منتج دواجن جديد 20", nameEn: "New Poultry Item 20", descAr: "", descEn: "", price: 0, category: "poultry", isAvailable: false, image: "/images/whole_chicken.png", weight: "1 كجم" },
+
+  // ---------------------------------------------------------
+  // 20 منتج جديد أخرى (غير معروض - سعر 0)
+  // ---------------------------------------------------------
+  { id: "o_new_1", nameAr: "منتج جديد آخر 1", nameEn: "New Other Item 1", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_2", nameAr: "منتج جديد آخر 2", nameEn: "New Other Item 2", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_3", nameAr: "منتج جديد آخر 3", nameEn: "New Other Item 3", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_4", nameAr: "منتج جديد آخر 4", nameEn: "New Other Item 4", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_5", nameAr: "منتج جديد آخر 5", nameEn: "New Other Item 5", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_6", nameAr: "منتج جديد آخر 6", nameEn: "New Other Item 6", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_7", nameAr: "منتج جديد آخر 7", nameEn: "New Other Item 7", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_8", nameAr: "منتج جديد آخر 8", nameEn: "New Other Item 8", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_9", nameAr: "منتج جديد آخر 9", nameEn: "New Other Item 9", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_10", nameAr: "منتج جديد آخر 10", nameEn: "New Other Item 10", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_11", nameAr: "منتج جديد آخر 11", nameEn: "New Other Item 11", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_12", nameAr: "منتج جديد آخر 12", nameEn: "New Other Item 12", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_13", nameAr: "منتج جديد آخر 13", nameEn: "New Other Item 13", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_14", nameAr: "منتج جديد آخر 14", nameEn: "New Other Item 14", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_15", nameAr: "منتج جديد آخر 15", nameEn: "New Other Item 15", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_16", nameAr: "منتج جديد آخر 16", nameEn: "New Other Item 16", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_17", nameAr: "منتج جديد آخر 17", nameEn: "New Other Item 17", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_18", nameAr: "منتج جديد آخر 18", nameEn: "New Other Item 18", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_19", nameAr: "منتج جديد آخر 19", nameEn: "New Other Item 19", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" },
+  { id: "o_new_20", nameAr: "منتج جديد آخر 20", nameEn: "New Other Item 20", descAr: "", descEn: "", price: 0, category: "other", isAvailable: false, image: "/images/other.svg", weight: "1 كجم" }
 ];
 
 // LocalStorage and API helpers for products
