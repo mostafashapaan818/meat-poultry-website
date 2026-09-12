@@ -34,12 +34,24 @@ function normalizeProduct(item: any): Product {
   };
 }
 
-// Merge base mockProducts with cloud dynamic store
+// Check if a base product was actually modified by staff
+function isProductEdited(orig: Product, p: Product): boolean {
+  return (
+    orig.nameAr !== p.nameAr ||
+    orig.nameEn !== p.nameEn ||
+    Number(orig.price) !== Number(p.price) ||
+    orig.category !== p.category ||
+    (orig.descAr || "").trim() !== (p.descAr || "").trim() ||
+    (orig.descEn || "").trim() !== (p.descEn || "").trim() ||
+    (orig.image || "").trim() !== (p.image || "").trim() ||
+    (orig.weight || "").trim() !== (p.weight || "").trim()
+  );
+}
+
+// Merge base mockProducts with dynamic cloud store
 function computeMergedProducts(store: CloudStore): Product[] {
   const { customProducts = [], editedProducts = [], deletedIds = [] } = store;
 
-  const baseIds = new Set(mockProducts.map((p) => p.id));
-  
   // Filter base products
   let merged = mockProducts.filter((p) => !deletedIds.includes(p.id));
 
@@ -49,12 +61,11 @@ function computeMergedProducts(store: CloudStore): Product[] {
     return ed ? normalizeProduct({ ...p, ...ed }) : p;
   });
 
-  // Filter custom products that were deleted
+  // Active custom products
   const activeCustom = customProducts
     .filter((p) => !deletedIds.includes(p.id))
     .map(normalizeProduct);
 
-  // Combine custom products at top + base products
   return [...activeCustom, ...merged];
 }
 
@@ -167,7 +178,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid payload format" }, { status: 400 });
     }
 
-    // Separate into custom vs edited vs deleted
+    // Separate into custom vs edited vs deleted with strict property comparison
     const customProducts: Product[] = [];
     const editedProducts: Product[] = [];
     const presentIds = new Set(updatedProducts.map((p) => p.id));
@@ -177,9 +188,16 @@ export async function POST(req: Request) {
         customProducts.push(p);
       } else {
         const orig = mockProducts.find((m) => m.id === p.id);
-        if (orig && JSON.stringify(orig) !== JSON.stringify(p)) {
+        if (orig && isProductEdited(orig, p)) {
           editedProducts.push(p);
         }
+      }
+    });
+
+    // Retain any existing custom products from store
+    currentStore.customProducts.forEach((existingCustom) => {
+      if (!customProducts.some((c) => c.id === existingCustom.id) && !currentStore.deletedIds.includes(existingCustom.id)) {
+        customProducts.push(existingCustom);
       }
     });
 
