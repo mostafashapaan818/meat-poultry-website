@@ -23,7 +23,7 @@ export interface MockOrder {
 }
 
 // Dedicated persistent Cloud DB endpoint (guarantees cross-device & serverless persistence)
-const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff8081819ff5b11001a010834d4d3926";
+const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a067127101a0966a8d08029a";
 
 // Configurable external PHP MySQL Backend endpoint
 const PHP_API_URL = process.env.NEXT_PUBLIC_PHP_API_URL || "";
