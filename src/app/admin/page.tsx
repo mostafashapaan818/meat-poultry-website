@@ -897,35 +897,49 @@ export default function AdminDashboard() {
                     return (
                       <div
                         key={product.id}
-                        className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition-colors ${
-                          isAvail ? "hover:bg-dark-bg/20" : "bg-red-500/5 hover:bg-red-500/10"
+                        className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition-all border-b border-dark-border/40 ${
+                          isAvail ? "hover:bg-dark-bg/20" : "bg-red-500/10 hover:bg-red-500/15 border-l-4 border-l-red-500"
                         }`}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          {/* Thumbnail */}
-                          <div className="h-12 w-12 rounded bg-dark-bg border border-dark-border flex items-center justify-center text-xl flex-shrink-0">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          {/* Thumbnail with status indicator dot */}
+                          <div className="relative h-12 w-12 rounded-xl bg-dark-bg border border-dark-border flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
                             {product.category === "meats" ? "🥩" : product.category === "poultry" ? "🍗" : "🔥"}
+                            <span
+                              className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-dark-surface shadow-md ${
+                                isAvail ? "bg-green-500" : "bg-red-500 animate-pulse"
+                              }`}
+                              title={isAvail ? "المنتج معروض في المتجر" : "المنتج موقوف عن العرض"}
+                            />
                           </div>
                           
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-bold text-white truncate">
+                              <span className="text-sm sm:text-base font-black text-white truncate">
                                 {name}
                               </span>
-                              <span
-                                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                              
+                              {/* 1-Click Interactive Status Dot Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleProductAvailability(product)}
+                                className={`text-[11px] font-extrabold px-3 py-1 rounded-full border flex items-center gap-1.5 transition-all shadow-sm hover:scale-105 active:scale-95 cursor-pointer ${
                                   isAvail
-                                    ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                    : "bg-red-500/10 text-red-400 border-red-500/20"
+                                    ? "bg-green-500/20 text-green-300 border-green-500/40 hover:bg-green-500/30"
+                                    : "bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30"
                                 }`}
                               >
-                                {isAvail
-                                  ? (language === "ar" ? "🟢 معروض بالمتجر" : "🟢 Visible")
-                                  : (language === "ar" ? "🔴 موقوف عن العرض" : "🔴 Hidden")}
-                              </span>
+                                <span className={`w-2.5 h-2.5 rounded-full ${isAvail ? "bg-green-400" : "bg-red-400"}`} />
+                                <span>
+                                  {isAvail
+                                    ? (language === "ar" ? "🟢 معروض (اضغط للإيقاف 🔴)" : "🟢 Visible (Click to hide)")
+                                    : (language === "ar" ? "🔴 موقوف (اضغط للعرض 🟢)" : "🔴 Hidden (Click to show)")}
+                                </span>
+                              </button>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] text-primary uppercase font-bold tracking-wider">
+
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-primary uppercase font-black tracking-wider">
                                 {t(product.category)}
                               </span>
                               <span className="text-dark-text-muted text-[10px]">
@@ -935,43 +949,26 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        {/* Price & actions */}
+                        {/* Price & Actions */}
                         <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                          <span className="text-sm font-extrabold text-white">
+                          <span className="text-sm sm:text-base font-extrabold text-white">
                             {product.price} <span className="text-[10px] text-primary">{t("currency")}</span>
                           </span>
 
                           <div className="flex items-center gap-1.5">
-                            {/* Quick Toggle visibility button */}
-                            <button
-                              onClick={() => handleToggleProductAvailability(product)}
-                              className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                                isAvail
-                                  ? "text-green-400 hover:bg-green-500/10 border border-green-500/20"
-                                  : "text-red-400 hover:bg-red-500/10 border border-red-500/20"
-                              }`}
-                              title={
-                                isAvail
-                                  ? (language === "ar" ? "إيقاف العرض من المتجر" : "Hide from store")
-                                  : (language === "ar" ? "تفعيل العرض بالمتجر" : "Show in store")
-                              }
-                            >
-                              {isAvail ? <Eye className="h-4 w-4 text-green-400" /> : <EyeOff className="h-4 w-4 text-red-400" />}
-                            </button>
-
                             <button
                               onClick={() => openEditModal(product)}
-                              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
                               title={t("editProduct")}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4.5 w-4.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteProduct(product.id)}
-                              className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                              className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                               title={t("deleteProduct")}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4.5 w-4.5" />
                             </button>
                           </div>
                         </div>

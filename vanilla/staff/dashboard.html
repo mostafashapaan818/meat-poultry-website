@@ -64,6 +64,7 @@
           <tr>
             <th></th>
             <th data-i18n="name">الاسم</th>
+            <th>حالة العرض</th>
             <th data-i18n="category">القسم</th>
             <th data-i18n="price">السعر</th>
             <th data-i18n="actions">الإجراءات</th>
@@ -108,29 +109,39 @@
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="fieldWeight">الوزن / الحجم</label>
-              <input id="prod-weight" type="text" class="form-input" placeholder="1 kg">
+              <input id="prod-weight" type="text" class="form-input" placeholder="e.g. 1 kg">
             </div>
           </div>
+
           <div class="form-group">
-            <label class="form-label" data-i18n="fieldCategory">القسم</label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:.25rem">
-              <button type="button" class="btn btn-outline btn-sm cat-picker active" data-cat="meats">🥩 لحوم</button>
-              <button type="button" class="btn btn-outline btn-sm cat-picker" data-cat="poultry">🍗 دواجن</button>
-              <button type="button" class="btn btn-outline btn-sm cat-picker" data-cat="other">🔥 أخرى</button>
+            <label class="form-label" data-i18n="category">القسم</label>
+            <div style="display:flex;gap:.5rem">
+              <button type="button" class="btn btn-outline btn-sm cat-picker active" data-cat="meats" data-i18n="catMeats">🥩 لحوم</button>
+              <button type="button" class="btn btn-outline btn-sm cat-picker" data-cat="poultry" data-i18n="catPoultry">🍗 دواجن</button>
+              <button type="button" class="btn btn-outline btn-sm cat-picker" data-cat="other" data-i18n="catOther">🔥 أخرى</button>
             </div>
             <input type="hidden" id="prod-category" value="meats">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">حالة العرض بالمتجر</label>
+            <div style="display:flex;gap:.5rem">
+              <button type="button" class="btn btn-outline btn-sm avail-picker active" data-avail="true" style="border-color:#22c55e;color:#4ade80;">🟢 معروض (نشط)</button>
+              <button type="button" class="btn btn-outline btn-sm avail-picker" data-avail="false" style="border-color:#ef4444;color:#f87171;">🔴 موقوف (مخفي)</button>
+            </div>
+            <input type="hidden" id="prod-is-available" value="true">
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeProductModal()" data-i18n="cancelBtn">إلغاء</button>
-        <button class="btn btn-primary" onclick="saveProduct()" data-i18n="saveBtn">حفظ</button>
+        <button class="btn btn-outline btn-sm" onclick="closeProductModal()" data-i18n="cancel">إلغاء</button>
+        <button class="btn btn-primary btn-sm" onclick="saveProduct()" data-i18n="save">حفظ</button>
       </div>
     </div>
   </div>
 
   <!-- Toast container -->
-  <div id="toast-container" class="toast-container"></div>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
   <!-- Scripts -->
   <script src="../js/i18n.js"></script>
@@ -147,6 +158,12 @@
     let products = [];
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Auth guard
+      if (sessionStorage.getItem('dm_staff_auth') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+
       // Logout
       document.getElementById('logout-btn').addEventListener('click', () => {
         sessionStorage.removeItem('dm_staff_auth');
@@ -160,6 +177,16 @@
           btn.classList.add('active', 'btn-primary');
           btn.classList.remove('btn-outline');
           document.getElementById('prod-category').value = btn.dataset.cat;
+        });
+      });
+
+      // Availability picker in modal
+      document.querySelectorAll('.avail-picker').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.avail-picker').forEach(b => b.classList.remove('active', 'btn-primary'));
+          btn.classList.add('active', 'btn-primary');
+          btn.classList.remove('btn-outline');
+          document.getElementById('prod-is-available').value = btn.dataset.avail;
         });
       });
 
@@ -216,8 +243,17 @@
       orders = stored.length ? stored : MOCK_ORDERS;
       fetchLiveOrders();
 
-      // Products: start from static, override with any localStorage edits
-      const storedP = localStorage.getItem('dm_products');
+      // Products: fetch live API or start from static
+      fetch('/api/products').then(r => r.json()).then(data => {
+        if (data && Array.isArray(data.products) && data.products.length > 0) {
+          products = data.products;
+          localStorage.setItem('dm_products', JSON.stringify(products));
+          localStorage.setItem('delicious_meats_products', JSON.stringify(products));
+          renderProducts();
+        }
+      }).catch(err => console.warn(err));
+
+      const storedP = localStorage.getItem('dm_products') || localStorage.getItem('delicious_meats_products');
       products = storedP ? JSON.parse(storedP) : [...PRODUCTS];
 
       renderOrders();
@@ -315,6 +351,26 @@
       });
     }
 
+    // ── Toggle Product Availability (1-Click) ──
+    function toggleProductVisibility(idx) {
+      const p = products[idx];
+      const isAvail = p.is_available !== false && p.isAvailable !== false;
+      const nextState = !isAvail;
+      p.is_available = nextState;
+      p.isAvailable = nextState;
+      localStorage.setItem('dm_products', JSON.stringify(products));
+      localStorage.setItem('delicious_meats_products', JSON.stringify(products));
+      renderProducts();
+      showToast((p.name_ar || p.nameAr) + ' — ' + (nextState ? '🟢 معروض في المتجر' : '🔴 موقوف عن العرض'), 'success');
+
+      // Sync to server API
+      fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products })
+      }).catch(err => console.error(err));
+    }
+
     // ── Render Products ──
     function renderProducts() {
       const lang  = i18n.getLang();
@@ -324,18 +380,25 @@
 
       products.forEach((p, idx) => {
         const icon = p.category === 'meats' ? '🥩' : p.category === 'poultry' ? '🍗' : '🔥';
-        const name = lang === 'ar' ? p.name_ar : p.name_en;
+        const name = lang === 'ar' ? (p.name_ar || p.nameAr) : (p.name_en || p.nameEn);
         const catLabel = lang === 'ar'
           ? (p.category === 'meats' ? 'لحوم' : p.category === 'poultry' ? 'دواجن' : 'أخرى')
           : (p.category === 'meats' ? 'Meats' : p.category === 'poultry' ? 'Poultry' : 'Other');
+        const isAvail = p.is_available !== false && p.isAvailable !== false;
+
+        const statusDotBtn = isAvail
+          ? `<button class="btn btn-sm" style="background:rgba(34,197,94,0.18);color:#4ade80;border:1px solid rgba(34,197,94,0.4);font-weight:bold;font-size:0.75rem;padding:0.3rem 0.75rem;border-radius:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;" onclick="toggleProductVisibility(${idx})"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>🟢 معروض (توقف🔴)</button>`
+          : `<button class="btn btn-sm" style="background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.4);font-weight:bold;font-size:0.75rem;padding:0.3rem 0.75rem;border-radius:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;" onclick="toggleProductVisibility(${idx})"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;"></span>🔴 موقوف (عرض🟢)</button>`;
 
         const tr = document.createElement('tr');
+        if (!isAvail) tr.style.background = 'rgba(239, 68, 68, 0.05)';
         tr.innerHTML = `
-          <td><div class="prod-thumb-cell">${icon}</div></td>
+          <td><div class="prod-thumb-cell" style="position:relative;">${icon}<span style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:${isAvail ? '#22c55e' : '#ef4444'};border:1px solid #111;"></span></div></td>
           <td>
             <strong>${name}</strong>
-            <div style="font-size:.72rem;color:var(--text-dim);margin-top:.1rem">${p.weight}</div>
+            <div style="font-size:.72rem;color:var(--text-dim);margin-top:.1rem">${p.weight || '1 kg'}</div>
           </td>
+          <td>${statusDotBtn}</td>
           <td><span class="status-badge status-new" style="font-size:.68rem">${catLabel}</span></td>
           <td><strong style="color:var(--gold)">${p.price.toLocaleString()} ${i18n.t('egp')}</strong></td>
           <td>
@@ -363,27 +426,43 @@
         document.getElementById('prod-price').value    = '';
         document.getElementById('prod-weight').value   = '1 kg';
         document.getElementById('prod-category').value = 'meats';
-        // Reset picker
+        document.getElementById('prod-is-available').value = 'true';
+        // Reset pickers
         document.querySelectorAll('.cat-picker').forEach(b => {
           b.classList.remove('active','btn-primary');
           b.classList.add('btn-outline');
         });
         document.querySelector('.cat-picker[data-cat="meats"]').classList.add('active','btn-primary');
         document.querySelector('.cat-picker[data-cat="meats"]').classList.remove('btn-outline');
+
+        document.querySelectorAll('.avail-picker').forEach(b => {
+          const active = b.dataset.avail === 'true';
+          b.classList.toggle('active', active);
+          b.classList.toggle('btn-primary', active);
+          b.classList.toggle('btn-outline', !active);
+        });
       } else {
         const p = products[idx];
+        const isAv = (p.is_available !== false && p.isAvailable !== false).toString();
         title.textContent = i18n.t('modalEditTitle');
         document.getElementById('prod-id').value       = idx;
-        document.getElementById('prod-name-ar').value  = p.name_ar;
-        document.getElementById('prod-name-en').value  = p.name_en;
-        document.getElementById('prod-desc-ar').value  = p.desc_ar;
-        document.getElementById('prod-desc-en').value  = p.desc_en;
+        document.getElementById('prod-name-ar').value  = p.name_ar || p.nameAr || '';
+        document.getElementById('prod-name-en').value  = p.name_en || p.nameEn || '';
+        document.getElementById('prod-desc-ar').value  = p.desc_ar || p.descAr || '';
+        document.getElementById('prod-desc-en').value  = p.desc_en || p.descEn || '';
         document.getElementById('prod-price').value    = p.price;
-        document.getElementById('prod-weight').value   = p.weight;
+        document.getElementById('prod-weight').value   = p.weight || '1 kg';
         document.getElementById('prod-category').value = p.category;
-        // Sync picker
+        document.getElementById('prod-is-available').value = isAv;
+        // Sync pickers
         document.querySelectorAll('.cat-picker').forEach(b => {
           const active = b.dataset.cat === p.category;
+          b.classList.toggle('active', active);
+          b.classList.toggle('btn-primary', active);
+          b.classList.toggle('btn-outline', !active);
+        });
+        document.querySelectorAll('.avail-picker').forEach(b => {
+          const active = b.dataset.avail === isAv;
           b.classList.toggle('active', active);
           b.classList.toggle('btn-primary', active);
           b.classList.toggle('btn-outline', !active);
@@ -405,17 +484,22 @@
       const price   = parseFloat(document.getElementById('prod-price').value);
       const weight  = document.getElementById('prod-weight').value.trim() || '1 kg';
       const cat     = document.getElementById('prod-category').value;
+      const isAvail = document.getElementById('prod-is-available').value === 'true';
 
-      if (!nameAr || !nameEn || isNaN(price) || price <= 0) {
+      if (!nameAr || isNaN(price) || price <= 0) {
         showToast(i18n.t('required'), 'error');
         return;
       }
 
       const prod = {
-        id: `custom-${Date.now()}`,
-        name_ar: nameAr, name_en: nameEn,
+        id: idxRaw === '' ? `custom-${Date.now()}` : products[parseInt(idxRaw)].id,
+        name_ar: nameAr, name_en: nameEn || nameAr,
+        nameAr: nameAr, nameEn: nameEn || nameAr,
         desc_ar: descAr, desc_en: descEn,
+        descAr: descAr, descEn: descEn,
         price, weight, category: cat,
+        is_available: isAvail,
+        isAvailable: isAvail,
         image: 'images/other.svg', is_bestseller: false
       };
 
@@ -428,8 +512,16 @@
       }
 
       localStorage.setItem('dm_products', JSON.stringify(products));
+      localStorage.setItem('delicious_meats_products', JSON.stringify(products));
       closeProductModal();
       renderProducts();
+
+      // Sync to cloud DB
+      fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products })
+      }).catch(err => console.error(err));
     }
 
     function deleteProduct(idx) {
