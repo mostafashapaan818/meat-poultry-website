@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -8,14 +8,23 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import DailyDishSection from "@/components/DailyDishSection";
 import { useLanguage } from "@/context/LanguageContext";
-import { mockProducts } from "@/data/products";
+import { Product, getStoredProducts, fetchLiveProducts } from "@/data/products";
 import { ArrowLeft, ArrowRight, ShieldCheck, Flame, Award } from "lucide-react";
 
 export default function Home() {
   const { t, language, dir } = useLanguage();
+  const [products, setProducts] = useState<Product[]>(getStoredProducts());
+
+  useEffect(() => {
+    fetchLiveProducts().then((data) => {
+      if (data && data.length > 0) {
+        setProducts(data);
+      }
+    });
+  }, []);
 
   // Filter 6-8 best selling products
-  const bestSellers = mockProducts.filter((product) => product.isBestSeller).slice(0, 8);
+  const bestSellers = products.filter((product) => product.isBestSeller).slice(0, 8);
 
   const categories = [
     {

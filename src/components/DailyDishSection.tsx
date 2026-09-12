@@ -21,9 +21,18 @@ export default function DailyDishSection() {
     const todayIndex = new Date().getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
     setSelectedDayIndex(todayIndex);
     
-    // Load from localStorage if updated by admin
+    // Load from localStorage first, then fetch live from API
     const loaded = getStoredDailyRecipes();
     setRecipes(loaded);
+
+    fetch("/api/recipes")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
+          setRecipes(data.recipes);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Listen to custom storage update event if updated in dashboard

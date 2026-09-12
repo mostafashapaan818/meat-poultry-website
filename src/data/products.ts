@@ -400,3 +400,49 @@ export const mockProducts: Product[] = [
     weight: "طقم (6 أسياخ)"
   }
 ];
+
+// LocalStorage and API helpers for products
+export function getStoredProducts(): Product[] {
+  if (typeof window === "undefined") return mockProducts;
+  try {
+    const stored = localStorage.getItem("delicious_meats_products");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Error reading products from localStorage", e);
+  }
+  return mockProducts;
+}
+
+export function saveStoredProducts(products: Product[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("delicious_meats_products", JSON.stringify(products));
+  } catch (e) {
+    console.error("Error saving products to localStorage", e);
+  }
+}
+
+export async function fetchLiveProducts(): Promise<Product[]> {
+  try {
+    const res = await fetch("/api/products", {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+        saveStoredProducts(data.products);
+        return data.products;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to fetch live products API:", e);
+  }
+  return getStoredProducts();
+}
+

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { use, useState, useMemo } from "react";
+import React, { use, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useLanguage } from "@/context/LanguageContext";
-import { mockProducts } from "@/data/products";
+import { Product, getStoredProducts, fetchLiveProducts } from "@/data/products";
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 
 interface CategoryClientProps {
@@ -16,9 +16,18 @@ interface CategoryClientProps {
 export default function CategoryClient({ slug }: CategoryClientProps) {
   const { t, language, dir } = useLanguage();
   
+  const [products, setProducts] = useState<Product[]>(getStoredProducts());
   const [sortBy, setSortBy] = useState<string>("default");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 50;
+
+  useEffect(() => {
+    fetchLiveProducts().then((data) => {
+      if (data && data.length > 0) {
+        setProducts(data);
+      }
+    });
+  }, []);
 
   const categoryNames = {
     meats: { ar: "لحوم فاخرة", en: "Premium Meats" },
@@ -30,8 +39,8 @@ export default function CategoryClient({ slug }: CategoryClientProps) {
   const displayName = language === "ar" ? currentCategoryName.ar : currentCategoryName.en;
 
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter((product) => product.category === slug);
-  }, [slug]);
+    return products.filter((product) => product.category === slug);
+  }, [products, slug]);
 
   const sortedProducts = useMemo(() => {
     const products = [...filteredProducts];

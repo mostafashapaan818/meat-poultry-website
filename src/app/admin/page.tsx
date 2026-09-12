@@ -5,7 +5,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
-import { mockProducts, Product } from "@/data/products";
+import { mockProducts, Product, getStoredProducts, saveStoredProducts, fetchLiveProducts } from "@/data/products";
 import { DailyRecipe, getStoredDailyRecipes, saveStoredDailyRecipes } from "@/data/dailyRecipes";
 import { 
   Lock, User, LogOut, CheckCircle, Package, ListOrdered, 
@@ -168,21 +168,29 @@ export default function AdminDashboard() {
     // Auto-poll live orders every 3 seconds for orders placed on phones
     const orderInterval = setInterval(fetchLiveOrders, 3000);
 
-    // Load Products
-    const storedProducts = localStorage.getItem("delicious_meats_products");
-    if (storedProducts) {
-      try {
-        setProducts(JSON.parse(storedProducts));
-      } catch (e) {
-        setProducts(mockProducts);
-      }
-    } else {
-      setProducts(mockProducts);
-      localStorage.setItem("delicious_meats_products", JSON.stringify(mockProducts));
-    }
+    // Load Products live from server API
+    const loadProducts = async () => {
+      const liveProds = await fetchLiveProducts();
+      setProducts(liveProds);
+    };
+    loadProducts();
 
-    // Load Daily Recipes
-    setDailyRecipes(getStoredDailyRecipes());
+    // Load Daily Recipes live from server API
+    const loadRecipes = async () => {
+      try {
+        const res = await fetch("/api/recipes", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > 0) {
+            setDailyRecipes(data.recipes);
+            saveStoredDailyRecipes(data.recipes);
+            return;
+          }
+        }
+      } catch (e) {}
+      setDailyRecipes(getStoredDailyRecipes());
+    };
+    loadRecipes();
 
     return () => clearInterval(orderInterval);
   }, []);
@@ -246,11 +254,19 @@ export default function AdminDashboard() {
   };
 
   // Delete product
-  const handleDeleteProduct = (prodId: string) => {
+  const handleDeleteProduct = async (prodId: string) => {
     if (!confirm(t("confirmDelete"))) return;
     const updated = products.filter((p) => p.id !== prodId);
     setProducts(updated);
-    localStorage.setItem("delicious_meats_products", JSON.stringify(updated));
+    saveStoredProducts(updated);
+
+    try {
+      await fetch(`/api/products?id=${encodeURIComponent(prodId)}`, {
+        method: "DELETE"
+      });
+    } catch (err) {
+      console.error("API delete product error:", err);
+    }
   };
 
   // Open Add Product Modal
@@ -286,9 +302,13 @@ export default function AdminDashboard() {
   };
 
   // Handle Product Form Submit
-  const handleProductSubmit = (e: React.FormEvent) => {
+  const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prodNameAr || !prodNameEn || !prodPrice) {
+
+    const nameAr = (prodNameAr.trim() || prodNameEn.trim());
+    const nameEn = (prodNameEn.trim() || prodNameAr.trim());
+
+    if (!nameAr || !prodPrice) {
       setFormError(t("requiredField"));
       return;
     }
@@ -303,14 +323,14 @@ export default function AdminDashboard() {
 
     if (modalMode === "add") {
       const newProd: Product = {
-        id: `m-custom-${Math.floor(1000 + Math.random() * 9000)}`,
-        nameAr: prodNameAr,
-        nameEn: prodNameEn,
-        descAr: prodDescAr,
-        descEn: prodDescEn,
+        id: `m-custom-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        nameAr: nameAr,
+        nameEn: nameEn,
+        descAr: prodDescAr.trim() || nameAr,
+        descEn: prodDescEn.trim() || nameEn,
         price: priceNum,
-        category: prodCategory,
-        weight: prodWeight,
+        category: prodCategory || "meats",
+        weight: prodWeight.trim() || "1 كجم",
         image: prodImage.trim() || "/images/meats_banner.png"
       };
       updatedProducts = [newProd, ...products];
@@ -319,13 +339,13 @@ export default function AdminDashboard() {
         if (p.id === selectedProductId) {
           return {
             ...p,
-            nameAr: prodNameAr,
-            nameEn: prodNameEn,
-            descAr: prodDescAr,
-            descEn: prodDescEn,
+            nameAr: nameAr,
+            nameEn: nameEn,
+            descAr: prodDescAr.trim() || p.descAr,
+            descEn: prodDescEn.trim() || p.descEn,
             price: priceNum,
-            category: prodCategory,
-            weight: prodWeight,
+            category: prodCategory || p.category,
+            weight: prodWeight.trim() || p.weight || "1 كجم",
             image: prodImage.trim() || p.image
           };
         }
@@ -334,8 +354,25 @@ export default function AdminDashboard() {
     }
 
     setProducts(updatedProducts);
-    localStorage.setItem("delicious_meats_products", JSON.stringify(updatedProducts));
+    saveStoredProducts(updatedProducts);
     setShowProductModal(false);
+
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products: updatedProducts })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          saveStoredProducts(data.products);
+        }
+      }
+    } catch (err) {
+      console.error("API save products error:", err);
+    }
   };
 
   // PDF Export helper for orders
@@ -459,7 +496,7 @@ export default function AdminDashboard() {
   };
 
   // Handle Recipe Submit
-  const handleRecipeSubmit = (e: React.FormEvent) => {
+  const handleRecipeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRecipe) return;
 
@@ -490,6 +527,16 @@ export default function AdminDashboard() {
     saveStoredDailyRecipes(updatedRecipes);
     setShowRecipeModal(false);
     setSelectedRecipe(null);
+
+    try {
+      await fetch("/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipes: updatedRecipes })
+      });
+    } catch (err) {
+      console.error("API save recipes error:", err);
+    }
   };
 
   // Render Login Component
