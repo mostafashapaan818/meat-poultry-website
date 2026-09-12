@@ -130,6 +130,33 @@ export default function AdminDashboard() {
   const [recImage, setRecImage] = useState("");
   const [recVideoUrl, setRecVideoUrl] = useState("");
 
+  // Dynamically compute unique YYYY-MM-DD date keys from orders sorted newest first
+  const availableOrderDates = React.useMemo(() => {
+    const datesSet = new Set<string>();
+    orders.forEach((o) => {
+      const dateVal = o.createdAt || (o as any).created_at;
+      if (dateVal) {
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          datesSet.add(`${yyyy}-${mm}-${dd}`);
+        }
+      }
+    });
+    return Array.from(datesSet).sort((a, b) => b.localeCompare(a));
+  }, [orders]);
+
+  const [selectedReportDate, setSelectedReportDate] = useState<string>("");
+
+  // Auto-select first date when orders load
+  useEffect(() => {
+    if (availableOrderDates.length > 0 && (!selectedReportDate || !availableOrderDates.includes(selectedReportDate))) {
+      setSelectedReportDate(availableOrderDates[0]);
+    }
+  }, [availableOrderDates, selectedReportDate]);
+
   // Fetch live orders from central server API so orders from phones appear in real time
   const fetchLiveOrders = async () => {
     try {
@@ -524,6 +551,195 @@ export default function AdminDashboard() {
     printWindow.document.close();
   };
 
+  // Daily Report PDF Export Handler for selected date
+  const handlePrintDailyPdf = (targetDateStr: string) => {
+    if (!targetDateStr) return;
+
+    // Filter orders matching target Date YYYY-MM-DD
+    const dayOrders = orders.filter((o) => {
+      const dateVal = o.createdAt || (o as any).created_at;
+      if (!dateVal) return false;
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return false;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}` === targetDateStr;
+    });
+
+    if (dayOrders.length === 0) {
+      alert(language === "ar" ? "لا توجد طلبات لهذا اليوم المحدد!" : "No orders for this selected date!");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const formattedDateTitle = new Date(targetDateStr + "T00:00:00").toLocaleDateString(
+      language === "ar" ? "ar-EG" : "en-US",
+      { weekday: "long", year: "numeric", month: "long", day: "numeric" }
+    );
+
+    const totalRevenue = dayOrders.reduce((sum, o) => sum + (o.totalValue || (o as any).total || 0), 0);
+    const totalItemsCount = dayOrders.reduce(
+      (sum, o) => sum + (o.items || []).reduce((itemSum, item) => itemSum + (item.quantity || 1), 0),
+      0
+    );
+
+    // Status counts
+    const statusCounts: Record<string, number> = {
+      new: 0,
+      preparing: 0,
+      delivering: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+    dayOrders.forEach((o) => {
+      if (statusCounts[o.status] !== undefined) statusCounts[o.status]++;
+    });
+
+    const rowsHtml = dayOrders
+      .map((o, idx) => {
+        const dateVal = o.createdAt || (o as any).created_at;
+        const timeStr = dateVal ? new Date(dateVal).toLocaleTimeString(
+          language === "ar" ? "ar-EG" : "en-US",
+          { hour: "2-digit", minute: "2-digit" }
+        ) : "";
+        
+        const itemsStr = (o.items || [])
+          .map((i) => `${i.nameAr || (i as any).name_ar || i.nameEn} (×${i.quantity || 1})`)
+          .join(" • ");
+
+        const statusArMap: Record<string, string> = {
+          new: "جديد 🆕",
+          preparing: "قيد التجهيز 👨‍🍳",
+          delivering: "في الطريق 🚚",
+          delivered: "تم التسليم ✅",
+          cancelled: "ملغي ❌"
+        };
+
+        return `
+          <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: bold;">${idx + 1}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
+              <strong style="color: #b8860b;">#${o.id}</strong><br/>
+              <small style="color: #64748b;">${timeStr}</small>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
+              <strong>${o.customerName || (o as any).customer_name}</strong><br/>
+              <span dir="ltr" style="font-size: 12px; color: #475569;">📞 ${o.phone}</span>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
+              ${o.governorate} - ${o.area}<br/>
+              <small style="color: #64748b;">${o.address || (o as any).address_details}</small>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
+              ${itemsStr}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px; font-weight: bold;">
+              ${statusArMap[o.status] || o.status}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 900; color: #1e293b;">
+              ${(o.totalValue || (o as any).total || 0).toLocaleString()} ج.م
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="utf-8" />
+        <title>تقرير مبيعات اليوم (${formattedDateTitle}) - ديليشس ميتس</title>
+        <style>
+          body { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 25px; color: #1e293b; background: #fff; }
+          .header { text-align: center; border-bottom: 3px solid #D4AF37; padding-bottom: 15px; margin-bottom: 20px; }
+          .header h1 { margin: 0; color: #0f172a; font-size: 26px; }
+          .header p { margin: 5px 0 0 0; color: #b8860b; font-weight: bold; font-size: 16px; }
+          
+          .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+          .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; text-align: center; }
+          .card-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; margin-bottom: 5px; }
+          .card-value { font-size: 20px; font-weight: 900; color: #0f172a; }
+          .card-value.highlight { color: #b8860b; }
+
+          table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px; }
+          th { background: #0f172a; color: #fff; padding: 12px 10px; text-align: center; font-size: 12px; }
+          
+          .grand-total-box { background: #fefce8; border: 2px solid #fef08a; padding: 20px; border-radius: 12px; text-align: center; margin-top: 20px; }
+          .grand-total-box h2 { margin: 0; color: #854d0e; font-size: 24px; }
+          .grand-total-box p { margin: 5px 0 0 0; color: #a16207; font-weight: bold; font-size: 14px; }
+
+          .footer-note { text-align: center; margin-top: 35px; font-size: 12px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 15px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>🥩 ديليشس ميتس - Delicious Meats</h1>
+          <p>📊 تقرير المبيعات والطلبات اليومي | ${formattedDateTitle}</p>
+        </div>
+
+        <div class="summary-cards">
+          <div class="card">
+            <div class="card-title">إجمالي عدد الطلبات</div>
+            <div class="card-value">${dayOrders.length} طلب</div>
+          </div>
+          <div class="card">
+            <div class="card-title">إجمالي مبيعات اليوم</div>
+            <div class="card-value highlight">${totalRevenue.toLocaleString()} ج.م</div>
+          </div>
+          <div class="card">
+            <div class="card-title">عدد المنتجات المباعة</div>
+            <div class="card-value">${totalItemsCount} قطعة</div>
+          </div>
+          <div class="card">
+            <div class="card-title">الطلبات المسلمة</div>
+            <div class="card-value" style="color: #16a34a;">${statusCounts.delivered} طلب</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>رقم الطلب والتاريخ</th>
+              <th>بيانات العميل</th>
+              <th>عنوان الشحن</th>
+              <th>تفاصيل الأصناف</th>
+              <th>حالة الطلب</th>
+              <th>إجمالي الحساب</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="grand-total-box">
+          <h2>💰 إجمالي حساب مبيعات اليوم: ${totalRevenue.toLocaleString()} جنيه مصري</h2>
+          <p>تم استخراج هذا التقرير بتاريخ: ${new Date().toLocaleString("ar-EG")}</p>
+        </div>
+
+        <div class="footer-note">
+          ديليشس ميتس - الخط الساخن: 19000 - info@deliciousmeats.me
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   // Open Recipe Edit Modal
   const openEditRecipeModal = (recipe: DailyRecipe) => {
     setSelectedRecipe(recipe);
@@ -747,8 +963,8 @@ export default function AdminDashboard() {
           {activeTab === "orders" && (
             <div className="space-y-6">
               
-              {/* Header Refresh Bar */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-dark-surface p-4 sm:p-5 rounded-2xl border border-dark-border shadow-lg">
+              {/* Header Refresh & Daily Report Bar */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-dark-surface p-4 sm:p-5 rounded-2xl border border-dark-border shadow-lg">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
                     <span>📋</span>
@@ -760,13 +976,53 @@ export default function AdminDashboard() {
                       : "Orders sync automatically from mobile devices in real time"}
                   </p>
                 </div>
-                <button
-                  onClick={fetchLiveOrders}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-dark-bg font-extrabold text-xs hover:bg-primary-hover active:scale-95 transition-all shadow-md shadow-primary/20"
-                >
-                  <span className="text-sm">🔄</span>
-                  <span>{language === "ar" ? "تحديث الطلبات الآن" : "Refresh Orders"}</span>
-                </button>
+
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  {/* Refresh Button */}
+                  <button
+                    onClick={fetchLiveOrders}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-dark-bg font-extrabold text-xs hover:bg-primary-hover active:scale-95 transition-all shadow-md shadow-primary/20"
+                  >
+                    <span className="text-sm">🔄</span>
+                    <span>{language === "ar" ? "تحديث الطلبات الآن" : "Refresh Orders"}</span>
+                  </button>
+
+                  {/* Daily Report Date Picker + Print PDF Button */}
+                  <div className="flex items-center gap-2 bg-dark-bg border border-dark-border p-1 rounded-xl">
+                    <select
+                      value={selectedReportDate}
+                      onChange={(e) => setSelectedReportDate(e.target.value)}
+                      className="bg-dark-bg text-white text-xs font-bold px-2 py-1.5 rounded-lg focus:outline-none focus:border-primary border border-transparent"
+                    >
+                      {availableOrderDates.length === 0 ? (
+                        <option value="">{language === "ar" ? "لا توجد تواريخ" : "No dates"}</option>
+                      ) : (
+                        availableOrderDates.map((dateKey) => {
+                          const displayDate = new Date(dateKey + "T00:00:00").toLocaleDateString(
+                            language === "ar" ? "ar-EG" : "en-US",
+                            { year: "numeric", month: "long", day: "numeric" }
+                          );
+                          return (
+                            <option key={dateKey} value={dateKey}>
+                              📅 {displayDate}
+                            </option>
+                          );
+                        })
+                      )}
+                    </select>
+
+                    <button
+                      onClick={() => handlePrintDailyPdf(selectedReportDate)}
+                      disabled={!selectedReportDate}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs font-black hover:bg-amber-500 hover:text-dark-bg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      title={language === "ar" ? "طباعة تقرير مبيعات اليوم المحدد PDF" : "Print Selected Day PDF Report"}
+                    >
+                      <Printer className="h-4 w-4" />
+                      <span>{language === "ar" ? "طباعة تقرير اليوم PDF" : "Print Day PDF"}</span>
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
               {/* Responsive Cards Grid */}

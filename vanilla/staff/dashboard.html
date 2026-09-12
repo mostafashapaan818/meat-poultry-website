@@ -48,6 +48,10 @@
   <div class="dash-panel active" id="panel-orders">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
       <h2 style="font-size:1rem;font-weight:800;color:var(--text);" data-i18n="ordersTitle">الطلبات الواردة</h2>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+        <select id="vanilla-report-date-select" style="background:#111;color:#fff;border:1px solid #333;padding:.4rem .6rem;border-radius:.5rem;font-size:.8rem;font-weight:bold;"></select>
+        <button class="btn btn-primary btn-sm" onclick="printDailyPdfReport()" style="background:rgba(212,175,55,0.2);color:var(--gold);border:1px solid var(--gold);font-weight:bold;">🖨️ طباعة تقرير اليوم PDF</button>
+      </div>
     </div>
     <div class="orders-grid" id="orders-grid"></div>
   </div>
@@ -292,6 +296,7 @@
 
     // ── Render Orders ──
     function renderOrders() {
+      updateReportDateOptions();
       const lang = i18n.getLang();
       const grid = document.getElementById('orders-grid');
       grid.innerHTML = '';
@@ -560,6 +565,220 @@
     document.getElementById('product-modal').addEventListener('click', function(e) {
       if (e.target === this) closeProductModal();
     });
+
+    // ── Update Report Dates Dropdown ──
+    function updateReportDateOptions() {
+      const select = document.getElementById('vanilla-report-date-select');
+      if (!select) return;
+      
+      const currentSelected = select.value;
+      const datesSet = new Set();
+      orders.forEach(o => {
+        const dateVal = o.created_at || o.createdAt;
+        if (dateVal) {
+          const d = new Date(dateVal);
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            datesSet.add(`${yyyy}-${mm}-${dd}`);
+          }
+        }
+      });
+
+      const sortedDates = Array.from(datesSet).sort((a, b) => b.localeCompare(a));
+      select.innerHTML = '';
+      if (sortedDates.length === 0) {
+        select.innerHTML = `<option value="">لا توجد تواريخ</option>`;
+        return;
+      }
+
+      sortedDates.forEach(dateStr => {
+        const opt = document.createElement('option');
+        opt.value = dateStr;
+        opt.textContent = `📅 ${dateStr}`;
+        if (dateStr === currentSelected) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      if (!select.value && sortedDates.length > 0) {
+        select.value = sortedDates[0];
+      }
+    }
+
+    // ── Print Daily PDF Report ──
+    function printDailyPdfReport() {
+      const select = document.getElementById('vanilla-report-date-select');
+      const targetDateStr = select ? select.value : '';
+      if (!targetDateStr) {
+        showToast('برجاء اختيار تاريخ أولاً', 'error');
+        return;
+      }
+
+      const dayOrders = orders.filter(o => {
+        const dateVal = o.created_at || o.createdAt;
+        if (!dateVal) return false;
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return false;
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}` === targetDateStr;
+      });
+
+      if (!dayOrders.length) {
+        showToast('لا توجد طلبات في هذا اليوم المحدد', 'error');
+        return;
+      }
+
+      const totalRevenue = dayOrders.reduce((sum, o) => sum + (o.total || o.totalValue || 0), 0);
+      const totalItemsCount = dayOrders.reduce((sum, o) => sum + (o.items || []).reduce((isum, i) => isum + (i.quantity || 1), 0), 0);
+      
+      const statusCounts = { new:0, preparing:0, delivering:0, delivered:0, cancelled:0 };
+      dayOrders.forEach(o => {
+        if (statusCounts[o.status] !== undefined) statusCounts[o.status]++;
+      });
+
+      const formattedDateTitle = new Date(targetDateStr + 'T00:00:00').toLocaleDateString('ar-EG', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      const rowsHtml = dayOrders.map((o, idx) => {
+        const dateVal = o.created_at || o.createdAt;
+        const timeStr = dateVal ? new Date(dateVal).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+        const itemsStr = (o.items || []).map(i => `${i.name_ar || i.nameAr || i.name_en} (×${i.quantity || 1})`).join(' • ');
+        
+        const statusArMap = {
+          new: 'جديد 🆕',
+          preparing: 'قيد التجهيز 👨‍🍳',
+          delivering: 'في الطريق 🚚',
+          delivered: 'تم التسليم ✅',
+          cancelled: 'ملغي ❌'
+        };
+
+        return `
+          <tr>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:bold;">${idx + 1}</td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;">
+              <strong style="color:#b8860b;">#${o.id}</strong><br/>
+              <small style="color:#64748b;">${timeStr}</small>
+            </td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;">
+              <strong>${o.customer_name || o.customerName}</strong><br/>
+              <span dir="ltr" style="font-size:12px;color:#475569;">📞 ${o.phone}</span>
+            </td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-size:12px;">
+              ${o.governorate} - ${o.area}<br/>
+              <small style="color:#64748b;">${o.address_details || o.address}</small>
+            </td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-size:12px;">
+              ${itemsStr}
+            </td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:center;font-size:12px;font-weight:bold;">
+              ${statusArMap[o.status] || o.status}
+            </td>
+            <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:900;color:#1e293b;">
+              ${(o.total || o.totalValue || 0).toLocaleString()} ج.م
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const htmlContent = \`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8" />
+          <title>تقرير مبيعات اليوم (\${formattedDateTitle}) - ديليشس ميتس</title>
+          <style>
+            body { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 25px; color: #1e293b; background: #fff; }
+            .header { text-align: center; border-bottom: 3px solid #D4AF37; padding-bottom: 15px; margin-bottom: 20px; }
+            .header h1 { margin: 0; color: #0f172a; font-size: 26px; }
+            .header p { margin: 5px 0 0 0; color: #b8860b; font-weight: bold; font-size: 16px; }
+            
+            .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+            .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; text-align: center; }
+            .card-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; margin-bottom: 5px; }
+            .card-value { font-size: 20px; font-weight: 900; color: #0f172a; }
+            .card-value.highlight { color: #b8860b; }
+
+            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px; }
+            th { background: #0f172a; color: #fff; padding: 12px 10px; text-align: center; font-size: 12px; }
+            
+            .grand-total-box { background: #fefce8; border: 2px solid #fef08a; padding: 20px; border-radius: 12px; text-align: center; margin-top: 20px; }
+            .grand-total-box h2 { margin: 0; color: #854d0e; font-size: 24px; }
+            .grand-total-box p { margin: 5px 0 0 0; color: #a16207; font-weight: bold; font-size: 14px; }
+
+            .footer-note { text-align: center; margin-top: 35px; font-size: 12px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 15px; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🥩 ديليشس ميتس - Delicious Meats</h1>
+            <p>📊 تقرير المبيعات والطلبات اليومي | \${formattedDateTitle}</p>
+          </div>
+
+          <div class="summary-cards">
+            <div class="card">
+              <div class="card-title">إجمالي عدد الطلبات</div>
+              <div class="card-value">\${dayOrders.length} طلب</div>
+            </div>
+            <div class="card">
+              <div class="card-title">إجمالي مبيعات اليوم</div>
+              <div class="card-value highlight">\${totalRevenue.toLocaleString()} ج.م</div>
+            </div>
+            <div class="card">
+              <div class="card-title">عدد المنتجات المباعة</div>
+              <div class="card-value">\${totalItemsCount} قطعة</div>
+            </div>
+            <div class="card">
+              <div class="card-title">الطلبات المسلمة</div>
+              <div class="card-value" style="color: #16a34a;">\${statusCounts.delivered} طلب</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>رقم الطلب والتاريخ</th>
+                <th>بيانات العميل</th>
+                <th>عنوان الشحن</th>
+                <th>تفاصيل الأصناف</th>
+                <th>حالة الطلب</th>
+                <th>إجمالي الحساب</th>
+              </tr>
+            </thead>
+            <tbody>
+              \${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="grand-total-box">
+            <h2>💰 إجمالي حساب مبيعات اليوم: \${totalRevenue.toLocaleString()} جنيه مصري</h2>
+            <p>تم استخراج هذا التقرير بتاريخ: \${new Date().toLocaleString('ar-EG')}</p>
+          </div>
+
+          <div class="footer-note">
+            ديليشس ميتس - الخط الساخن: 19000 - info@deliciousmeats.me
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          <\/script>
+        </body>
+        </html>
+      \`;
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      }
+    }
   </script>
 </body>
 </html>
