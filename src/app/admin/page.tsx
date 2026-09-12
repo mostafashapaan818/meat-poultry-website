@@ -13,39 +13,11 @@ import {
   Eye, EyeOff, Bell, Volume2
 } from "lucide-react";
 
-const CHIME_WAV_BASE64 = "data:audio/wav;base64,UklGRk7xAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTbxAAB/v/+f/6n/vf/X/+/";
-
-// Global AudioContext singleton & Pre-unlocked HTML5 Audio Element for mobile WebKit & browser autoplay policies
+// Global AudioContext singleton for mobile WebKit & browser autoplay policies
 let globalAudioCtx: AudioContext | null = null;
-let preloadedAudioEl: HTMLAudioElement | null = null;
 
-const getChimeAudioElement = (): HTMLAudioElement | null => {
+const getAudioContext = (): AudioContext | null => {
   if (typeof window === "undefined") return null;
-  if (!preloadedAudioEl) {
-    preloadedAudioEl = document.getElementById("dm-chime-audio-el") as HTMLAudioElement;
-    if (!preloadedAudioEl) {
-      preloadedAudioEl = new Audio(CHIME_WAV_BASE64);
-      preloadedAudioEl.id = "dm-chime-audio-el";
-      preloadedAudioEl.preload = "auto";
-    }
-  }
-  return preloadedAudioEl;
-};
-
-const unlockAudioContext = () => {
-  if (typeof window === "undefined") return null;
-
-  // Unlock HTML5 Audio Element for background mobile playback
-  const audioEl = getChimeAudioElement();
-  if (audioEl) {
-    audioEl.volume = 1.0;
-    audioEl.play().then(() => {
-      audioEl.pause();
-      audioEl.currentTime = 0;
-    }).catch(() => {});
-  }
-
-  // Unlock Web Audio API Context
   if (!globalAudioCtx) {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (AudioCtx) {
@@ -55,36 +27,29 @@ const unlockAudioContext = () => {
   if (globalAudioCtx && globalAudioCtx.state === "suspended") {
     globalAudioCtx.resume().catch(() => {});
   }
-
-  if (typeof window !== "undefined" && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-    Notification.requestPermission().catch(() => {});
-  }
   return globalAudioCtx;
 };
 
-// Web Audio API & HTML5 Audio Chime Sound Generator (Instant Mobile Sound + Haptic Vibration)
+const unlockAudioContext = () => {
+  const ctx = getAudioContext();
+  if (typeof window !== "undefined" && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+    Notification.requestPermission().catch(() => {});
+  }
+  return ctx;
+};
+
+// Web Audio API Chime Alert (Loud Bell Chime + Mobile Haptic Vibration)
 const playOrderChime = () => {
   try {
-    // 1. Instant Playback via Pre-Unlocked HTML5 Audio Element (Works on Mobile Background Polling)
-    const audioEl = getChimeAudioElement();
-    if (audioEl) {
-      audioEl.currentTime = 0;
-      audioEl.volume = 1.0;
-      const playPromise = audioEl.play();
-      if (playPromise && typeof playPromise.then === "function") {
-        playPromise.catch(() => {});
-      }
-    }
-
-    // 2. Mobile Haptic Vibration Alert
+    // 1. Mobile Haptic Vibration Alert
     if (typeof window !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate([400, 150, 400, 150, 600]);
       } catch (e) {}
     }
 
-    // 3. Audio Context Synth Backup
-    const ctx = unlockAudioContext();
+    // 2. Web Audio Context Playback
+    const ctx = getAudioContext();
     if (!ctx) return;
 
     if (ctx.state === "suspended") {
@@ -93,42 +58,23 @@ const playOrderChime = () => {
 
     const now = ctx.currentTime;
 
-    // Tone 1: E5 (659.25 Hz)
-    const osc1 = ctx.createOscillator();
-    const g1 = ctx.createGain();
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(659.25, now);
-    g1.gain.setValueAtTime(0.5, now);
-    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-    osc1.connect(g1);
-    g1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.35);
-    osc1.stop(now + 0.35);
+    const playNote = (freq: number, startTime: number, duration: number, volume = 0.6) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + startTime);
+      gain.gain.setValueAtTime(volume, now + startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + startTime);
+      osc.stop(now + startTime + duration);
+    };
 
-    // Tone 2: A5 (880 Hz)
-    const osc2 = ctx.createOscillator();
-    const g2 = ctx.createGain();
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(880, now + 0.15);
-    g2.gain.setValueAtTime(0.6, now + 0.15);
-    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
-    osc2.connect(g2);
-    g2.connect(ctx.destination);
-    osc2.start(now + 0.15);
-    osc2.stop(now + 0.75);
-
-    // Tone 3: C#6 (1108.73 Hz) Loud Alert Peak
-    const osc3 = ctx.createOscillator();
-    const g3 = ctx.createGain();
-    osc3.type = "triangle";
-    osc3.frequency.setValueAtTime(1108.73, now + 0.35);
-    g3.gain.setValueAtTime(0.6, now + 0.35);
-    g3.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
-    osc3.connect(g3);
-    g3.connect(ctx.destination);
-    osc3.start(now + 0.35);
-    osc3.stop(now + 0.95);
+    // Loud, clear 3-step bell chime (E5 -> A5 -> C#6)
+    playNote(659.25, 0, 0.4, 0.6);
+    playNote(880.00, 0.18, 0.5, 0.7);
+    playNote(1108.73, 0.38, 0.6, 0.8);
   } catch (e) {
     console.error("Audio chime error:", e);
   }

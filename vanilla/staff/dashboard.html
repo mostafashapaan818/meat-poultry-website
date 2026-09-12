@@ -214,38 +214,13 @@
     });
 
     // ── State & Real-time Notification System ──
-    const CHIME_WAV_BASE64 = "data:audio/wav;base64,UklGRk7xAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTbxAAB/v/+f/6n/vf/X/+/";
     let orders   = [];
     let products = [];
     let knownOrderIds = new Set();
     let isInitialLoad = true;
     let globalAudioCtx = null;
-    let preloadedAudioEl = null;
 
-    function getChimeAudioElement() {
-      if (!preloadedAudioEl) {
-        preloadedAudioEl = document.getElementById('dm-chime-audio-el');
-        if (!preloadedAudioEl) {
-          preloadedAudioEl = new Audio(CHIME_WAV_BASE64);
-          preloadedAudioEl.id = 'dm-chime-audio-el';
-          preloadedAudioEl.preload = 'auto';
-        }
-      }
-      return preloadedAudioEl;
-    }
-
-    function unlockAudioContext() {
-      // 1. Unlock HTML5 Audio Element for mobile background playback
-      const audioEl = getChimeAudioElement();
-      if (audioEl) {
-        audioEl.volume = 1.0;
-        audioEl.play().then(() => {
-          audioEl.pause();
-          audioEl.currentTime = 0;
-        }).catch(() => {});
-      }
-
-      // 2. Unlock Web Audio API Context
+    function getAudioContext() {
       if (!globalAudioCtx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
@@ -255,45 +230,40 @@
       if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
         globalAudioCtx.resume().catch(() => {});
       }
+      return globalAudioCtx;
+    }
+
+    function unlockAudioContext() {
+      const ctx = getAudioContext();
       if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission().catch(() => {});
       }
-      return globalAudioCtx;
+      return ctx;
     }
 
     function playOrderChime() {
       try {
-        // 1. Instant Playback via Pre-Unlocked HTML5 Audio Element
-        const audioEl = getChimeAudioElement();
-        if (audioEl) {
-          audioEl.currentTime = 0;
-          audioEl.volume = 1.0;
-          const p = audioEl.play();
-          if (p && typeof p.then === 'function') {
-            p.catch(() => {});
-          }
-        }
-
-        // 2. Mobile Haptic Vibration
+        // 1. Mobile Haptic Vibration
         if ('vibrate' in navigator) {
           try {
             navigator.vibrate([400, 150, 400, 150, 600]);
           } catch (e) {}
         }
 
-        const ctx = unlockAudioContext();
+        // 2. Web Audio Context Playback
+        const ctx = getAudioContext();
         if (!ctx) return;
         if (ctx.state === 'suspended') {
           ctx.resume().catch(() => {});
         }
 
         const now = ctx.currentTime;
-        const playTone = (freq, startTime, duration, type = 'sine') => {
+        const playTone = (freq, startTime, duration, type = 'sine', volume = 0.6) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = type;
           osc.frequency.setValueAtTime(freq, now + startTime);
-          gain.gain.setValueAtTime(0.5, now + startTime);
+          gain.gain.setValueAtTime(volume, now + startTime);
           gain.gain.exponentialRampToValueAtTime(0.001, now + startTime + duration);
           osc.connect(gain);
           gain.connect(ctx.destination);
@@ -301,14 +271,12 @@
           osc.stop(now + startTime + duration);
         };
 
-        playTone(659.25, 0, 0.35);      // E5
-        playTone(880.00, 0.15, 0.45);   // A5
-        playTone(1108.73, 0.35, 0.6, 'triangle'); // C#6 Peak Loud Tone
+        playTone(659.25, 0, 0.4, 'sine', 0.6);
+        playTone(880.00, 0.18, 0.5, 'sine', 0.7);
+        playTone(1108.73, 0.38, 0.6, 'triangle', 0.8);
       } catch (err) {
         console.warn('Audio play failed:', err);
       }
-    }
-
     function triggerWebNotification(title, body) {
       if (!('Notification' in window)) return;
       if (Notification.permission === 'granted') {
