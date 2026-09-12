@@ -224,7 +224,17 @@
               created_at: o.createdAt || o.created_at || new Date().toISOString()
             }));
 
-            orders = apiOrders;
+            // Smart merge: keep local orders so nothing disappears!
+            const stored = JSON.parse(localStorage.getItem('dm_orders') || localStorage.getItem('delicious_meats_orders') || '[]');
+            const map = new Map();
+            orders.forEach(o => map.set(o.id, o));
+            stored.forEach(o => map.set(o.id, o));
+            apiOrders.forEach(o => {
+              const existing = map.get(o.id);
+              map.set(o.id, existing ? { ...existing, ...o } : o);
+            });
+
+            orders = Array.from(map.values()).sort((a,b) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
             localStorage.setItem('dm_orders', JSON.stringify(orders));
             localStorage.setItem('delicious_meats_orders', JSON.stringify(orders));
             renderOrders();

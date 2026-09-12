@@ -72,7 +72,24 @@ function normalizeOrder(item: any): MockOrder {
 async function fetchAllOrders(): Promise<MockOrder[]> {
   const mergedMap = new Map<string, MockOrder>();
 
-  // 1. Fetch from Cloud DB (Instant Cross-Device Sync)
+  // 1. Check local disk store first if filesystem is available
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const filePath = path.join(process.cwd(), "src/data/orders_store.json");
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, "utf-8");
+      const parsed = JSON.parse(content);
+      if (parsed && Array.isArray(parsed.orders)) {
+        parsed.orders.forEach((o: any) => {
+          const norm = normalizeOrder(o);
+          mergedMap.set(norm.id, norm);
+        });
+      }
+    }
+  } catch (e) {}
+
+  // 2. Fetch from Cloud DB (Instant Cross-Device Sync)
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
@@ -89,7 +106,8 @@ async function fetchAllOrders(): Promise<MockOrder[]> {
       if (json && json.data && Array.isArray(json.data.orders)) {
         json.data.orders.forEach((o: any) => {
           const norm = normalizeOrder(o);
-          mergedMap.set(norm.id, norm);
+          const existing = mergedMap.get(norm.id);
+          mergedMap.set(norm.id, existing ? { ...norm, ...existing } : norm);
         });
       }
     }
@@ -97,7 +115,7 @@ async function fetchAllOrders(): Promise<MockOrder[]> {
     console.warn("Cloud DB fetch error:", e);
   }
 
-  // 2. Fetch from PHP API if configured
+  // 3. Fetch from PHP API if configured
   if (PHP_API_URL && PHP_API_URL.startsWith("https")) {
     try {
       const controller = new AbortController();
@@ -121,9 +139,10 @@ async function fetchAllOrders(): Promise<MockOrder[]> {
     } catch (e) {}
   }
 
-  // 3. Merge local in-memory items
+  // 4. Merge local in-memory items (never drop items created in this process)
   localMemoryOrders.forEach((o) => {
-    if (!mergedMap.has(o.id)) mergedMap.set(o.id, o);
+    const existing = mergedMap.get(o.id);
+    mergedMap.set(o.id, existing ? { ...existing, ...o } : o);
   });
 
   const all = Array.from(mergedMap.values()).sort(
@@ -134,25 +153,45 @@ async function fetchAllOrders(): Promise<MockOrder[]> {
   return all;
 }
 
-// Persist orders array to Cloud DB
+// Persist orders array to Cloud DB & disk with retry loop
 async function persistOrdersToCloud(orders: MockOrder[]) {
+  // Disk fallback if filesystem is writable
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const fs = require("fs");
+    const path = require("path");
+    const filePath = path.join(process.cwd(), "src/data/orders_store.json");
+    const dirPath = path.dirname(filePath);
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify({ orders }, null, 2), "utf-8");
+  } catch (e) {}
 
-    await fetch(CLOUD_DB_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "delicious-meats-orders",
-        data: { orders }
-      }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-  } catch (e) {
-    console.error("Cloud DB persist error:", e);
+  // Retry Cloud DB PUT up to 3 times
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+      const res = await fetch(CLOUD_DB_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache"
+        },
+        body: JSON.stringify({
+          name: "delicious-meats-orders",
+          data: { orders }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        return true;
+      }
+    } catch (e) {
+      if (attempt === 3) console.error("Cloud DB persist error:", e);
+    }
   }
+  return false;
 }
 
 // Background sync to PHP MySQL backend if valid

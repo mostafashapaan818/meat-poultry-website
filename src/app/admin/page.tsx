@@ -140,15 +140,35 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         if (data.orders && Array.isArray(data.orders)) {
-          setOrders(data.orders);
-          try {
-            localStorage.setItem("delicious_meats_orders", JSON.stringify(data.orders));
-          } catch (e) {}
+          setOrders((prevOrders) => {
+            const localStr = typeof window !== "undefined" ? localStorage.getItem("delicious_meats_orders") : null;
+            const storedOrders: MockOrder[] = localStr ? JSON.parse(localStr) : [];
+
+            const map = new Map<string, MockOrder>();
+            // 1. Put current component state orders
+            prevOrders.forEach((o) => map.set(o.id, o));
+            // 2. Put local storage orders
+            storedOrders.forEach((o) => map.set(o.id, o));
+            // 3. Put server orders (merge status)
+            data.orders.forEach((o: MockOrder) => {
+              const existing = map.get(o.id);
+              map.set(o.id, existing ? { ...existing, ...o } : o);
+            });
+
+            const merged = Array.from(map.values()).sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            try {
+              localStorage.setItem("delicious_meats_orders", JSON.stringify(merged));
+            } catch (e) {}
+
+            return merged;
+          });
         }
       }
     } catch (err) {
       console.error("Error fetching live orders:", err);
-      // Local storage fallback
       try {
         const local = localStorage.getItem("delicious_meats_orders");
         if (local) setOrders(JSON.parse(local));
