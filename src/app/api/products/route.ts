@@ -13,6 +13,9 @@ interface CloudStore {
   deletedIds: string[];
 }
 
+// Global server memory cache across lambda invocations
+let globalStoreMemory: CloudStore | null = null;
+
 function normalizeProduct(item: any): Product {
   const rawAr = (item.nameAr || item.name_ar || "").toString().trim();
   const rawEn = (item.nameEn || item.name_en || "").toString().trim();
@@ -71,6 +74,7 @@ function computeMergedProducts(store: CloudStore): Product[] {
 
 // Read cloud store state
 async function fetchCloudStore(): Promise<CloudStore> {
+  // 1. Check Cloud DB first
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
@@ -85,28 +89,37 @@ async function fetchCloudStore(): Promise<CloudStore> {
     if (res.ok) {
       const json = await res.json();
       if (json && json.data) {
-        return {
+        const store: CloudStore = {
           customProducts: Array.isArray(json.data.customProducts) ? json.data.customProducts : [],
           editedProducts: Array.isArray(json.data.editedProducts) ? json.data.editedProducts : [],
           deletedIds: Array.isArray(json.data.deletedIds) ? json.data.deletedIds : []
         };
+        globalStoreMemory = store;
+        return store;
       }
     }
   } catch (e) {
     console.warn("Cloud DB fetch store error:", e);
   }
 
-  // Disk fallback check
+  // 2. Check global memory if cloud DB timeout
+  if (globalStoreMemory) {
+    return globalStoreMemory;
+  }
+
+  // 3. Disk fallback check
   try {
     if (fs.existsSync(LOCAL_FILE_PATH)) {
       const content = fs.readFileSync(LOCAL_FILE_PATH, "utf-8");
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return {
+        const store: CloudStore = {
           customProducts: parsed.customProducts || [],
           editedProducts: parsed.editedProducts || [],
           deletedIds: parsed.deletedIds || []
         };
+        globalStoreMemory = store;
+        return store;
       }
     }
   } catch (e) {}
@@ -114,8 +127,10 @@ async function fetchCloudStore(): Promise<CloudStore> {
   return { customProducts: [], editedProducts: [], deletedIds: [] };
 }
 
-// Persist cloud store state
+// Persist cloud store state with retries
 async function saveCloudStore(store: CloudStore) {
+  globalStoreMemory = store;
+
   // Save disk cache if filesystem is writable
   try {
     const dir = path.dirname(LOCAL_FILE_PATH);
@@ -123,23 +138,29 @@ async function saveCloudStore(store: CloudStore) {
     fs.writeFileSync(LOCAL_FILE_PATH, JSON.stringify(store, null, 2), "utf-8");
   } catch (e) {}
 
-  // Sync to Cloud DB
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+  // Sync to Cloud DB with 3 retries
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
-    await fetch(CLOUD_DB_PRODUCTS_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "delicious-meats-products",
-        data: store
-      }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-  } catch (e) {
-    console.error("Cloud DB save store error:", e);
+      const res = await fetch(CLOUD_DB_PRODUCTS_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "delicious-meats-products",
+          data: store
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        break;
+      }
+    } catch (e) {
+      console.warn(`Cloud DB save store attempt ${attempt} error:`, e);
+    }
   }
 }
 
