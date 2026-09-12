@@ -79,15 +79,10 @@ function computeMergedProducts(store: CloudStore): Product[] {
 async function fetchCloudStore(): Promise<CloudStore> {
   // 1. Check Cloud DB first
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
     const res = await fetch(CLOUD_DB_PRODUCTS_URL, {
       cache: "no-store",
-      headers: { "Cache-Control": "no-cache" },
-      signal: controller.signal
+      headers: { "Cache-Control": "no-cache" }
     });
-    clearTimeout(timeoutId);
 
     if (res.ok) {
       const json = await res.json();
@@ -130,7 +125,7 @@ async function fetchCloudStore(): Promise<CloudStore> {
   return { customProducts: [], editedProducts: [], deletedIds: [] };
 }
 
-// Persist cloud store state with retries
+// Persist cloud store state
 async function saveCloudStore(store: CloudStore) {
   globalStoreMemory = store;
 
@@ -141,33 +136,25 @@ async function saveCloudStore(store: CloudStore) {
     fs.writeFileSync(LOCAL_FILE_PATH, JSON.stringify(store, null, 2), "utf-8");
   } catch (e) {}
 
-  // Sync to Cloud DB with 3 retries
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
-
-      const res = await fetch(CLOUD_DB_PRODUCTS_URL, {
-        method: "PUT",
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache"
-        },
-        body: JSON.stringify({
-          name: "delicious-meats-products",
-          data: store
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        break;
-      }
-    } catch (e) {
-      console.warn(`Cloud DB save store attempt ${attempt} error:`, e);
+  // Sync to Cloud DB
+  try {
+    const res = await fetch(CLOUD_DB_PRODUCTS_URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+      },
+      body: JSON.stringify({
+        name: "delicious-meats-products",
+        data: store
+      })
+    });
+    if (res.ok) {
+      console.log("Successfully persisted store to Cloud DB!");
     }
+  } catch (e) {
+    console.warn("Cloud DB save store error:", e);
   }
 }
 
