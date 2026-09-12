@@ -77,9 +77,14 @@ export default function Footer() {
           
           {/* Column 1: Brand Info */}
           <div>
-            <div className="flex items-center gap-1.5 text-xl font-bold text-white mb-3">
-              <span className="text-primary">★</span>
-              {t("brandName")}
+            <div className="flex items-center gap-2.5 text-xl font-bold text-white mb-3">
+              {/* eslint-disable-next-html-extension/next-image-unoptimized */}
+              <img
+                src="/images/logo.png"
+                alt={t("brandName")}
+                className="w-9 h-9 rounded-full object-cover border border-primary/40 flex-shrink-0"
+              />
+              <span>{t("brandName")}</span>
             </div>
             <p className="text-xs sm:text-sm text-dark-text-muted leading-relaxed">
               {language === "ar" 
