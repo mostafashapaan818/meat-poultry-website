@@ -13,11 +13,39 @@ import {
   Eye, EyeOff, Bell, Volume2
 } from "lucide-react";
 
-// Global AudioContext singleton for mobile WebKit & browser autoplay policies
+const CHIME_WAV_BASE64 = "data:audio/wav;base64,UklGRk7xAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTbxAAB/v/+f/6n/vf/X/+/";
+
+// Global AudioContext singleton & Pre-unlocked HTML5 Audio Element for mobile WebKit & browser autoplay policies
 let globalAudioCtx: AudioContext | null = null;
+let preloadedAudioEl: HTMLAudioElement | null = null;
+
+const getChimeAudioElement = (): HTMLAudioElement | null => {
+  if (typeof window === "undefined") return null;
+  if (!preloadedAudioEl) {
+    preloadedAudioEl = document.getElementById("dm-chime-audio-el") as HTMLAudioElement;
+    if (!preloadedAudioEl) {
+      preloadedAudioEl = new Audio(CHIME_WAV_BASE64);
+      preloadedAudioEl.id = "dm-chime-audio-el";
+      preloadedAudioEl.preload = "auto";
+    }
+  }
+  return preloadedAudioEl;
+};
 
 const unlockAudioContext = () => {
   if (typeof window === "undefined") return null;
+
+  // Unlock HTML5 Audio Element for background mobile playback
+  const audioEl = getChimeAudioElement();
+  if (audioEl) {
+    audioEl.volume = 1.0;
+    audioEl.play().then(() => {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+    }).catch(() => {});
+  }
+
+  // Unlock Web Audio API Context
   if (!globalAudioCtx) {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (AudioCtx) {
@@ -27,23 +55,35 @@ const unlockAudioContext = () => {
   if (globalAudioCtx && globalAudioCtx.state === "suspended") {
     globalAudioCtx.resume().catch(() => {});
   }
+
   if (typeof window !== "undefined" && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
     Notification.requestPermission().catch(() => {});
   }
   return globalAudioCtx;
 };
 
-// Web Audio API Chime Sound Generator (Triple Loud Bell Alert + Mobile Haptic Vibration)
+// Web Audio API & HTML5 Audio Chime Sound Generator (Instant Mobile Sound + Haptic Vibration)
 const playOrderChime = () => {
   try {
-    // 1. Mobile Haptic Vibration Alert
+    // 1. Instant Playback via Pre-Unlocked HTML5 Audio Element (Works on Mobile Background Polling)
+    const audioEl = getChimeAudioElement();
+    if (audioEl) {
+      audioEl.currentTime = 0;
+      audioEl.volume = 1.0;
+      const playPromise = audioEl.play();
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise.catch(() => {});
+      }
+    }
+
+    // 2. Mobile Haptic Vibration Alert
     if (typeof window !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate([400, 150, 400, 150, 600]);
       } catch (e) {}
     }
 
-    // 2. Audio Context Sound Playback
+    // 3. Audio Context Synth Backup
     const ctx = unlockAudioContext();
     if (!ctx) return;
 
@@ -63,6 +103,7 @@ const playOrderChime = () => {
     osc1.connect(g1);
     g1.connect(ctx.destination);
     osc1.start(now);
+    osc1.stop(now + 0.35);
     osc1.stop(now + 0.35);
 
     // Tone 2: A5 (880 Hz)

@@ -214,13 +214,38 @@
     });
 
     // ── State & Real-time Notification System ──
+    const CHIME_WAV_BASE64 = "data:audio/wav;base64,UklGRk7xAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTbxAAB/v/+f/6n/vf/X/+/";
     let orders   = [];
     let products = [];
     let knownOrderIds = new Set();
     let isInitialLoad = true;
     let globalAudioCtx = null;
+    let preloadedAudioEl = null;
+
+    function getChimeAudioElement() {
+      if (!preloadedAudioEl) {
+        preloadedAudioEl = document.getElementById('dm-chime-audio-el');
+        if (!preloadedAudioEl) {
+          preloadedAudioEl = new Audio(CHIME_WAV_BASE64);
+          preloadedAudioEl.id = 'dm-chime-audio-el';
+          preloadedAudioEl.preload = 'auto';
+        }
+      }
+      return preloadedAudioEl;
+    }
 
     function unlockAudioContext() {
+      // 1. Unlock HTML5 Audio Element for mobile background playback
+      const audioEl = getChimeAudioElement();
+      if (audioEl) {
+        audioEl.volume = 1.0;
+        audioEl.play().then(() => {
+          audioEl.pause();
+          audioEl.currentTime = 0;
+        }).catch(() => {});
+      }
+
+      // 2. Unlock Web Audio API Context
       if (!globalAudioCtx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
@@ -238,7 +263,18 @@
 
     function playOrderChime() {
       try {
-        // Mobile Haptic Vibration
+        // 1. Instant Playback via Pre-Unlocked HTML5 Audio Element
+        const audioEl = getChimeAudioElement();
+        if (audioEl) {
+          audioEl.currentTime = 0;
+          audioEl.volume = 1.0;
+          const p = audioEl.play();
+          if (p && typeof p.then === 'function') {
+            p.catch(() => {});
+          }
+        }
+
+        // 2. Mobile Haptic Vibration
         if ('vibrate' in navigator) {
           try {
             navigator.vibrate([400, 150, 400, 150, 600]);
