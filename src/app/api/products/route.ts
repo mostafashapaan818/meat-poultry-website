@@ -151,10 +151,13 @@ async function saveCloudStore(store: CloudStore) {
       })
     });
     if (res.ok) {
-      console.log("Successfully persisted store to Cloud DB!");
+      const data = await res.json();
+      return { success: true, status: res.status, data };
     }
-  } catch (e) {
+    return { success: false, status: res.status };
+  } catch (e: any) {
     console.warn("Cloud DB save store error:", e);
+    return { success: false, error: e?.message };
   }
 }
 
@@ -219,11 +222,11 @@ export async function POST(req: Request) {
     const deletedIds = mockProducts.filter((m) => !presentIds.has(m.id)).map((m) => m.id);
 
     const newStore: CloudStore = { customProducts, editedProducts, deletedIds };
-    await saveCloudStore(newStore);
+    const cloudRes = await saveCloudStore(newStore);
 
     const merged = computeMergedProducts(newStore);
 
-    return NextResponse.json({ success: true, products: merged }, {
+    return NextResponse.json({ success: true, products: merged, cloudRes }, {
       headers: { "Access-Control-Allow-Origin": "*" }
     });
   } catch (e) {
@@ -261,10 +264,10 @@ export async function DELETE(req: Request) {
       currentStore.deletedIds.push(idToDelete);
     }
 
-    await saveCloudStore(currentStore);
+    const cloudRes = await saveCloudStore(currentStore);
     const merged = computeMergedProducts(currentStore);
 
-    return NextResponse.json({ success: true, products: merged }, {
+    return NextResponse.json({ success: true, products: merged, cloudRes }, {
       headers: { "Access-Control-Allow-Origin": "*" }
     });
   } catch (e) {
