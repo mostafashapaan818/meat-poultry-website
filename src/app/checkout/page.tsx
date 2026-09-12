@@ -373,6 +373,7 @@ export default function CheckoutPage() {
                       }}
                       className={`w-full bg-dark-bg border ${errors.governorate ? "border-red-500" : "border-dark-border"} rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors`}
                     >
+                      <option value="">{t("selectGovernorate")}</option>
                       {GOVERNORATES.map((gov) => {
                         const label = language === "ar" ? gov.ar : gov.en;
                         return (
@@ -395,8 +396,12 @@ export default function CheckoutPage() {
                       onChange={(e) => setArea(e.target.value)}
                       className={`w-full bg-dark-bg border ${errors.area ? "border-red-500" : "border-dark-border"} rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors`}
                     >
-                      <option value="">-- اختر المنطقة داخل {governorate === "Cairo" ? "القاهرة" : "الجيزة"} --</option>
-                      {selectedAreasList.map((aObj) => {
+                      <option value="">
+                        {!governorate
+                          ? (language === "ar" ? "-- اختر المحافظة أولاً --" : "-- Select Governorate First --")
+                          : (language === "ar" ? `-- اختر المنطقة داخل ${governorate === "Cairo" ? "القاهرة" : "الجيزة"} --` : `-- Select Area in ${governorate === "Cairo" ? "Cairo" : "Giza"} --`)}
+                      </option>
+                      {governorate && selectedAreasList.map((aObj) => {
                         const label = language === "ar" ? aObj.ar : aObj.en;
                         const freeTag = aObj.isFree ? (language === "ar" ? " (توصيل مجاني 🎉)" : " (Free Delivery 🎉)") : "";
                         return (

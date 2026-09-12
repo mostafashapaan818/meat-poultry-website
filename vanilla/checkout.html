@@ -209,9 +209,16 @@
     function populateAreaSelect(govKey) {
       const areaSelect = document.getElementById('f-area');
       const lang = i18n.getLang();
-      areaSelect.innerHTML = `<option value="">${lang === 'ar' ? '-- اختر المنطقة --' : '-- Select Area --'}</option>`;
       
-      const areas = AREAS_BY_GOVERNORATE[govKey] || AREAS_BY_GOVERNORATE.Cairo;
+      if (!govKey) {
+        areaSelect.innerHTML = `<option value="">${lang === 'ar' ? '-- اختر المحافظة أولاً --' : '-- Select Governorate First --'}</option>`;
+        updateDeliveryNotice();
+        return;
+      }
+
+      areaSelect.innerHTML = `<option value="">${lang === 'ar' ? `-- اختر المنطقة داخل ${govKey === 'Cairo' ? 'القاهرة' : 'الجيزة'} --` : `-- Select Area in ${govKey === 'Cairo' ? 'Cairo' : 'Giza'} --`}</option>`;
+      
+      const areas = AREAS_BY_GOVERNORATE[govKey] || [];
       areas.forEach(a => {
         const opt = document.createElement('option');
         opt.value = a.ar;
