@@ -149,7 +149,11 @@ async function saveCloudStore(store: CloudStore) {
 
       const res = await fetch(CLOUD_DB_PRODUCTS_URL, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache"
+        },
         body: JSON.stringify({
           name: "delicious-meats-products",
           data: store
