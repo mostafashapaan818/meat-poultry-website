@@ -9,7 +9,8 @@ import { mockProducts, Product, getStoredProducts, saveStoredProducts, fetchLive
 import { DailyRecipe, getStoredDailyRecipes, saveStoredDailyRecipes } from "@/data/dailyRecipes";
 import { 
   Lock, User, LogOut, CheckCircle, Package, ListOrdered, 
-  Trash2, Edit, Plus, Phone, MapPin, X, ChefHat, Sparkles, Clock, Users, BookOpen, UtensilsCrossed, Printer, FileText
+  Trash2, Edit, Plus, Phone, MapPin, X, ChefHat, Sparkles, Clock, Users, BookOpen, UtensilsCrossed, Printer, FileText,
+  Eye, EyeOff
 } from "lucide-react";
 
 interface MockOrder {
@@ -108,6 +109,7 @@ export default function AdminDashboard() {
   const [prodCategory, setProdCategory] = useState<"meats" | "poultry" | "other">("meats");
   const [prodWeight, setProdWeight] = useState("");
   const [prodImage, setProdImage] = useState("");
+  const [prodIsAvailable, setProdIsAvailable] = useState(true);
   const [formError, setFormError] = useState("");
 
   // Recipe Modal State
@@ -281,6 +283,7 @@ export default function AdminDashboard() {
     setProdCategory("meats");
     setProdWeight("1 kg");
     setProdImage("/images/meats_banner.png");
+    setProdIsAvailable(true);
     setFormError("");
     setShowProductModal(true);
   };
@@ -297,6 +300,7 @@ export default function AdminDashboard() {
     setProdCategory(product.category);
     setProdWeight(product.weight || "1 kg");
     setProdImage(product.image || "");
+    setProdIsAvailable(product.isAvailable !== false);
     setFormError("");
     setShowProductModal(true);
   };
@@ -331,7 +335,8 @@ export default function AdminDashboard() {
         price: priceNum,
         category: prodCategory || "meats",
         weight: prodWeight.trim() || "1 كجم",
-        image: prodImage.trim() || "/images/meats_banner.png"
+        image: prodImage.trim() || "/images/meats_banner.png",
+        isAvailable: prodIsAvailable
       };
       updatedProducts = [newProd, ...products];
     } else {
@@ -346,7 +351,8 @@ export default function AdminDashboard() {
             price: priceNum,
             category: prodCategory || p.category,
             weight: prodWeight.trim() || p.weight || "1 كجم",
-            image: prodImage.trim() || p.image
+            image: prodImage.trim() || p.image,
+            isAvailable: prodIsAvailable
           };
         }
         return p;
@@ -372,6 +378,29 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("API save products error:", err);
+    }
+  };
+
+  // Quick 1-click toggle product store visibility (Eye / EyeOff)
+  const handleToggleProductAvailability = async (product: Product) => {
+    const nextState = product.isAvailable === false ? true : false;
+    const updatedProducts = products.map((p) => {
+      if (p.id === product.id) {
+        return { ...p, isAvailable: nextState };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+    saveStoredProducts(updatedProducts);
+
+    try {
+      await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products: updatedProducts })
+      });
+    } catch (err) {
+      console.error("API toggle product availability error:", err);
     }
   };
 
@@ -864,10 +893,13 @@ export default function AdminDashboard() {
                 <div className="divide-y divide-dark-border">
                   {products.map((product) => {
                     const name = language === "ar" ? product.nameAr : product.nameEn;
+                    const isAvail = product.isAvailable !== false;
                     return (
                       <div
                         key={product.id}
-                        className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-dark-bg/20 transition-colors"
+                        className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition-colors ${
+                          isAvail ? "hover:bg-dark-bg/20" : "bg-red-500/5 hover:bg-red-500/10"
+                        }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {/* Thumbnail */}
@@ -876,9 +908,22 @@ export default function AdminDashboard() {
                           </div>
                           
                           <div className="min-w-0">
-                            <span className="text-sm font-bold text-white block truncate">
-                              {name}
-                            </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-bold text-white truncate">
+                                {name}
+                              </span>
+                              <span
+                                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                                  isAvail
+                                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                    : "bg-red-500/10 text-red-400 border-red-500/20"
+                                }`}
+                              >
+                                {isAvail
+                                  ? (language === "ar" ? "🟢 معروض بالمتجر" : "🟢 Visible")
+                                  : (language === "ar" ? "🔴 موقوف عن العرض" : "🔴 Hidden")}
+                              </span>
+                            </div>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-[10px] text-primary uppercase font-bold tracking-wider">
                                 {t(product.category)}
@@ -891,12 +936,29 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Price & actions */}
-                        <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                           <span className="text-sm font-extrabold text-white">
                             {product.price} <span className="text-[10px] text-primary">{t("currency")}</span>
                           </span>
 
-                          <div className="flex gap-1.5">
+                          <div className="flex items-center gap-1.5">
+                            {/* Quick Toggle visibility button */}
+                            <button
+                              onClick={() => handleToggleProductAvailability(product)}
+                              className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                                isAvail
+                                  ? "text-green-400 hover:bg-green-500/10 border border-green-500/20"
+                                  : "text-red-400 hover:bg-red-500/10 border border-red-500/20"
+                              }`}
+                              title={
+                                isAvail
+                                  ? (language === "ar" ? "إيقاف العرض من المتجر" : "Hide from store")
+                                  : (language === "ar" ? "تفعيل العرض بالمتجر" : "Show in store")
+                              }
+                            >
+                              {isAvail ? <Eye className="h-4 w-4 text-green-400" /> : <EyeOff className="h-4 w-4 text-red-400" />}
+                            </button>
+
                             <button
                               onClick={() => openEditModal(product)}
                               className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
@@ -1137,6 +1199,40 @@ export default function AdminDashboard() {
                   className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
                   dir="ltr"
                 />
+              </div>
+
+              {/* Product Visibility Option */}
+              <div className="space-y-1 bg-dark-bg/60 border border-dark-border p-3.5 rounded-xl">
+                <label className="text-xs font-bold text-gray-200 block mb-2">
+                  {language === "ar" ? "حالة عرض المنتج في المتجر" : "Store Display Visibility"}
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setProdIsAvailable(true)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+                      prodIsAvailable
+                        ? "bg-green-500/20 border-green-500/50 text-green-400 shadow-sm"
+                        : "border-dark-border bg-dark-bg text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span>{language === "ar" ? "مفعل (يعرض للعملاء)" : "Visible (Show)"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setProdIsAvailable(false)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+                      !prodIsAvailable
+                        ? "bg-red-500/20 border-red-500/50 text-red-400 shadow-sm"
+                        : "border-dark-border bg-dark-bg text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    <EyeOff className="h-4 w-4" />
+                    <span>{language === "ar" ? "موقوف (مخفي)" : "Disabled (Hide)"}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Actions submit */}

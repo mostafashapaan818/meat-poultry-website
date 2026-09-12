@@ -24,7 +24,7 @@ export default function Home() {
   }, []);
 
   // Filter 6-8 best selling products
-  const bestSellers = products.filter((product) => product.isBestSeller).slice(0, 8);
+  const bestSellers = products.filter((product) => product.isBestSeller && product.isAvailable !== false).slice(0, 8);
 
   const categories = [
     {

@@ -39,7 +39,7 @@ export default function CategoryClient({ slug }: CategoryClientProps) {
   const displayName = language === "ar" ? currentCategoryName.ar : currentCategoryName.en;
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => product.category === slug);
+    return products.filter((product) => product.category === slug && product.isAvailable !== false);
   }, [products, slug]);
 
   const sortedProducts = useMemo(() => {

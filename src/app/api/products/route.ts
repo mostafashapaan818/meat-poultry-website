@@ -32,6 +32,7 @@ function normalizeProduct(item: any): Product {
     price: Math.max(0, Number(item.price || 0)),
     category: (item.category === "poultry" || item.category === "other") ? item.category : "meats",
     isBestSeller: Boolean(item.isBestSeller),
+    isAvailable: item.isAvailable !== undefined ? Boolean(item.isAvailable) : true,
     image: item.image?.trim() || "/images/meats_banner.png",
     weight: item.weight || "1 كجم"
   };
@@ -44,6 +45,7 @@ function isProductEdited(orig: Product, p: Product): boolean {
     orig.nameEn !== p.nameEn ||
     Number(orig.price) !== Number(p.price) ||
     orig.category !== p.category ||
+    Boolean(orig.isAvailable ?? true) !== Boolean(p.isAvailable ?? true) ||
     (orig.descAr || "").trim() !== (p.descAr || "").trim() ||
     (orig.descEn || "").trim() !== (p.descEn || "").trim() ||
     (orig.image || "").trim() !== (p.image || "").trim() ||

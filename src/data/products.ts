@@ -7,6 +7,7 @@ export interface Product {
   price: number;
   category: "meats" | "poultry" | "other";
   isBestSeller?: boolean;
+  isAvailable?: boolean;
   image: string;
   weight?: string;
 }
