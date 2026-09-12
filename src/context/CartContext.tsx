@@ -8,6 +8,8 @@ export interface CartItem {
   quantity: number;
 }
 
+export const MIN_ORDER_LIMIT = 600;
+
 interface CartContextProps {
   cart: CartItem[];
   addToCart: (product: Product, quantity?: number) => void;
@@ -18,6 +20,10 @@ interface CartContextProps {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  minOrderLimit: number;
+  isMinOrderReached: boolean;
+  remainingForMinOrder: number;
+  minOrderProgress: number;
 }
 
 const CartContext = createContext<CartContextProps | undefined>(undefined);
@@ -83,6 +89,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   
+  // Minimum Order Limit metrics
+  const minOrderLimit = MIN_ORDER_LIMIT;
+  const isMinOrderReached = subtotal >= MIN_ORDER_LIMIT;
+  const remainingForMinOrder = Math.max(0, MIN_ORDER_LIMIT - subtotal);
+  const minOrderProgress = Math.min(100, Math.round((subtotal / MIN_ORDER_LIMIT) * 100));
+
   // Delivery is 50 EGP, free for orders above 1500 EGP, or 0 if cart is empty
   const deliveryFee = cart.length === 0 ? 0 : subtotal >= 1500 ? 0 : 50;
   const total = subtotal + deliveryFee;
@@ -99,6 +111,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         subtotal,
         deliveryFee,
         total,
+        minOrderLimit,
+        isMinOrderReached,
+        remainingForMinOrder,
+        minOrderProgress,
       }}
     >
       {children}

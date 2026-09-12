@@ -16,7 +16,11 @@ export default function CartPage() {
     removeFromCart,
     subtotal,
     deliveryFee,
-    total
+    total,
+    minOrderLimit,
+    isMinOrderReached,
+    remainingForMinOrder,
+    minOrderProgress
   } = useCart();
 
   return (
@@ -129,6 +133,46 @@ export default function CartPage() {
                   {t("orderSummary")}
                 </h2>
 
+                {/* 🌟 Interactive Minimum Order Progress Bar (600 EGP) 🌟 */}
+                <div className="bg-dark-bg border border-dark-border/80 rounded-2xl p-4 space-y-3 shadow-inner">
+                  <div className="flex items-center justify-between text-xs font-black">
+                    <span className="flex items-center gap-1.5 text-white">
+                      <span>{isMinOrderReached ? "🎉" : "🎯"}</span>
+                      <span>
+                        {isMinOrderReached
+                          ? (language === "ar" ? "وصلت للحد الأدنى للطلب!" : "Min order target reached!")
+                          : (language === "ar" ? `الحد الأدنى للطلب (600 ج.م)` : `Minimum Order (600 EGP)`)}
+                      </span>
+                    </span>
+                    <span className={`font-black text-xs ${isMinOrderReached ? "text-green-400" : "text-primary"}`}>
+                      {subtotal} / 600 ج.م ({minOrderProgress}%)
+                    </span>
+                  </div>
+
+                  {/* Dynamic Gradient Bar */}
+                  <div className="w-full h-3 bg-dark-surface border border-dark-border/60 rounded-full overflow-hidden p-0.5 relative">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${
+                        isMinOrderReached
+                          ? "bg-gradient-to-r from-green-500 to-emerald-400 shadow-[0_0_12px_rgba(34,197,94,0.6)]"
+                          : "bg-gradient-to-r from-amber-500 via-primary to-amber-400 shadow-[0_0_12px_rgba(212,175,55,0.6)]"
+                      }`}
+                      style={{ width: `${minOrderProgress}%` }}
+                    />
+                  </div>
+
+                  {/* Status Banner Text */}
+                  <p className={`text-[11px] font-bold leading-relaxed ${isMinOrderReached ? "text-green-400" : "text-amber-400"}`}>
+                    {isMinOrderReached
+                      ? (language === "ar"
+                          ? "✅ ممتاز! لقد تجاوزت الحد الأدنى للطلب (600 ج.م) ويمكنك إتمام أوردرك الآن."
+                          : "✅ Great! You have met the 600 EGP minimum order limit.")
+                      : (language === "ar"
+                          ? `⚠️ باقي ${remainingForMinOrder} ج.م فقط ليصل طلبك للحد الأدنى (600 ج.م) وتتمكن من الشحن.`
+                          : `⚠️ Add ${remainingForMinOrder} EGP more to meet the minimum order limit (600 EGP).`)}
+                  </p>
+                </div>
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-dark-text-muted">{t("subtotal")}</span>
@@ -153,7 +197,7 @@ export default function CartPage() {
                       <Info className="h-4 w-4 flex-shrink-0" />
                       <span>
                         {language === "ar"
-                          ? "أضف بـ بقيمة " + (1500 - subtotal) + " ج.م إضافية للحصول على شحن مجاني!"
+                          ? "أضف بقيمة " + (1500 - subtotal) + " ج.م إضافية للحصول على شحن مجاني!"
                           : "Add " + (1500 - subtotal) + " EGP more for FREE shipping!"}
                       </span>
                     </div>
@@ -180,13 +224,41 @@ export default function CartPage() {
                   </p>
                 </div>
 
-                <Link
-                  href="/checkout"
-                  className="w-full py-4 px-6 rounded-xl bg-primary text-dark-bg font-extrabold text-center hover:bg-primary-hover active:scale-95 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-                >
-                  <span>{t("checkoutButton")}</span>
-                  {dir === "rtl" ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-                </Link>
+                {/* Checkout Link / Safeguard Button */}
+                {isMinOrderReached ? (
+                  <Link
+                    href="/checkout"
+                    className="w-full py-4 px-6 rounded-xl bg-primary text-dark-bg font-extrabold text-center hover:bg-primary-hover active:scale-95 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                  >
+                    <span>{t("checkoutButton")}</span>
+                    {dir === "rtl" ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                  </Link>
+                ) : (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        alert(
+                          language === "ar"
+                            ? `عذراً، الحد الأدنى للطلب هو 600 ج.م. يرجى إضافة منتجات بقيمة ${remainingForMinOrder} ج.م إضافية لتتمكن من إتمام الطلب.`
+                            : `Minimum order limit is 600 EGP. Please add ${remainingForMinOrder} EGP more to proceed.`
+                        );
+                      }}
+                      className="w-full py-4 px-6 rounded-xl bg-gray-800 text-gray-400 font-extrabold text-center cursor-not-allowed border border-gray-700 opacity-80 flex items-center justify-center gap-2"
+                    >
+                      <span>
+                        {language === "ar"
+                          ? `الحد الأدنى 600 ج.م (باقي ${remainingForMinOrder} ج.م)`
+                          : `Min order 600 EGP (${remainingForMinOrder} EGP left)`}
+                      </span>
+                    </button>
+                    <p className="text-[10px] text-amber-400 text-center font-bold">
+                      {language === "ar"
+                        ? "⚠️ الزر غير مفعل حتى يتجاوز إجمالي السلة 600 ج.م"
+                        : "⚠️ Button disabled until cart subtotal reaches 600 EGP"}
+                    </p>
+                  </div>
+                )}
 
                 <Link
                   href="/"

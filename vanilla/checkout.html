@@ -319,10 +319,11 @@
       injectHeader();
       injectFooter();
 
-      // Redirect to home if cart is empty
-      if (!Cart.getItems().length) {
-        showToast(i18n.t('emptyCart'), 'error');
-        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+      // Redirect to cart if empty or under 600 EGP minimum order limit
+      const cartSub = Cart.getSubtotal();
+      if (!Cart.getItems().length || cartSub < 600) {
+        showToast(cartSub < 600 ? 'عذراً، الحد الأدنى لإتمام الطلب هو 600 ج.م' : i18n.t('emptyCart'), 'error');
+        setTimeout(() => { window.location.href = 'cart.html'; }, 2000);
         return;
       }
 

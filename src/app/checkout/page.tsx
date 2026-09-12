@@ -270,6 +270,15 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!validateForm()) return;
 
+    if (subtotal < 600) {
+      alert(
+        language === "ar"
+          ? `عذراً، الحد الأدنى لإتمام الطلب هو 600 ج.م. إجمالي السلة الحالي: ${subtotal} ج.م (باقي ${600 - subtotal} ج.م).`
+          : `Minimum order limit is 600 EGP. Current cart subtotal: ${subtotal} EGP (${600 - subtotal} EGP left).`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     const randRef = `DM-${Math.floor(100000 + Math.random() * 900000)}`;

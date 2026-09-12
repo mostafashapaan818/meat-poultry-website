@@ -41,6 +41,20 @@
             <div class="order-summary">
               <div class="summary-title" data-i18n="orderSummary">ملخص الطلب</div>
 
+              <!-- 🌟 Interactive Minimum Order Progress Bar (600 EGP) 🌟 -->
+              <div id="min-order-bar-container" style="background:#111;border:1px solid #222;border-radius:.8rem;padding:.8rem;margin-bottom:1.2rem;">
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem;font-weight:bold;margin-bottom:.4rem;">
+                  <span id="min-order-title" style="color:#fff;">🎯 الحد الأدنى للطلب (600 ج.م)</span>
+                  <span id="min-order-percent" style="color:var(--gold);">0%</span>
+                </div>
+                <div style="width:100%;height:8px;background:#222;border-radius:10px;overflow:hidden;position:relative;">
+                  <div id="min-order-fill" style="height:100%;width:0%;background:linear-gradient(90deg, #d4af37, #f59e0b);border-radius:10px;transition:width 0.4s ease;"></div>
+                </div>
+                <div id="min-order-desc" style="font-size:.72rem;font-weight:bold;margin-top:.5rem;color:#f59e0b;line-height:1.4;">
+                  ⚠️ يرجى إضافة منتجات لتصل للحد الأدنى (600 ج.م)
+                </div>
+              </div>
+
               <div class="summary-row">
                 <span class="label" data-i18n="subtotal">المجموع الفرعي</span>
                 <span class="val" id="summary-subtotal">0 ج.م</span>
@@ -65,7 +79,7 @@
                 </div>
               </div>
 
-              <a href="checkout.html" class="btn btn-primary btn-full">
+              <a href="checkout.html" id="cart-checkout-btn" class="btn btn-primary btn-full">
                 <span data-i18n="checkoutBtn">إتمام الطلب الآن</span> →
               </a>
 
@@ -192,6 +206,52 @@
         hintEl.textContent = i18n.t('freeShipHint', { amount: (1500 - sub).toLocaleString() });
       } else {
         hintEl.classList.add('hide');
+      }
+
+      // Minimum Order Progress Bar (600 EGP)
+      const minLimit = 600;
+      const isMinReached = sub >= minLimit;
+      const remMin = Math.max(0, minLimit - sub);
+      const pctMin = Math.min(100, Math.round((sub / minLimit) * 100));
+
+      const titleEl = document.getElementById('min-order-title');
+      const pctEl   = document.getElementById('min-order-percent');
+      const fillEl  = document.getElementById('min-order-fill');
+      const descEl  = document.getElementById('min-order-desc');
+      const checkoutBtn = document.getElementById('cart-checkout-btn');
+
+      if (titleEl && pctEl && fillEl && descEl) {
+        pctEl.textContent = `${pctMin}%`;
+        fillEl.style.width = `${pctMin}%`;
+        if (isMinReached) {
+          titleEl.textContent = lang === 'ar' ? '🎉 وصلت للحد الأدنى للطلب!' : '🎉 Min Order Reached!';
+          pctEl.style.color = '#22c55e';
+          fillEl.style.background = 'linear-gradient(90deg, #22c55e, #10b981)';
+          descEl.style.color = '#22c55e';
+          descEl.textContent = lang === 'ar' ? '✅ ممتاز! يمكنك الآن إتمام أوردرك بكل سهولة.' : '✅ Great! You can proceed to checkout.';
+          if (checkoutBtn) {
+            checkoutBtn.style.opacity = '1';
+            checkoutBtn.style.cursor = 'pointer';
+            checkoutBtn.onclick = null;
+          }
+        } else {
+          titleEl.textContent = lang === 'ar' ? '🎯 الحد الأدنى للطلب (600 ج.م)' : '🎯 Minimum Order (600 EGP)';
+          pctEl.style.color = 'var(--gold)';
+          fillEl.style.background = 'linear-gradient(90deg, #d4af37, #f59e0b)';
+          descEl.style.color = '#f59e0b';
+          descEl.textContent = lang === 'ar'
+            ? `⚠️ باقي ${remMin.toLocaleString()} ج.م فقط ليصل طلبك للحد الأدنى (600 ج.م).`
+            : `⚠️ Add ${remMin.toLocaleString()} EGP more to meet minimum order limit (600 EGP).`;
+          if (checkoutBtn) {
+            checkoutBtn.style.opacity = '0.5';
+            checkoutBtn.onclick = (e) => {
+              e.preventDefault();
+              alert(lang === 'ar'
+                ? `عذراً، الحد الأدنى للطلب هو 600 ج.م. يرجى إضافة منتجات بقيمة ${remMin.toLocaleString()} ج.م إضافية لتتمكن من إتمام الطلب.`
+                : `Minimum order limit is 600 EGP. Please add ${remMin.toLocaleString()} EGP more to proceed.`);
+            };
+          }
+        }
       }
 
       // COD desc
