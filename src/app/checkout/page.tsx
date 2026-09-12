@@ -266,9 +266,16 @@ export default function CheckoutPage() {
               )}
 
               <Link
+                href={`/track-order?id=${encodeURIComponent(lastOrderDetails.orderRef)}`}
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-primary text-dark-bg font-black hover:opacity-90 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/25 text-xs sm:text-sm animate-pulse"
+              >
+                <span>🚚 تتبع حالة الطلب التفاعلية والعد التنازلي</span>
+              </Link>
+
+              <Link
                 href={`/invoice?id=${encodeURIComponent(lastOrderDetails.orderRef)}`}
                 target="_blank"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-dark-bg font-extrabold hover:bg-primary-hover active:scale-95 transition-all duration-200 shadow-md text-xs"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-dark-bg border border-primary/40 text-primary font-extrabold hover:bg-primary/10 active:scale-95 transition-all duration-200 shadow-md text-xs"
               >
                 <span>📄 عرض وتنزيل الفاتورة PDF</span>
               </Link>

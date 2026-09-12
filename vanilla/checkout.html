@@ -437,19 +437,28 @@
         const waUrl = `https://wa.me/201092719920?text=${encodeURIComponent(waMsg)}`;
 
         const waContainer = document.getElementById('whatsapp-btn-container');
+        let waBtnHTML = "";
         if (!isFree) {
-          waContainer.innerHTML = `
+          waBtnHTML = `
             <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn" style="background-color: #059669; color: #ffffff; font-weight: 900; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; font-size: 0.95rem; text-decoration: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">
               <span>الاستفسار عن رسوم التوصيل 💬</span>
             </a>
           `;
         } else {
-          waContainer.innerHTML = `
+          waBtnHTML = `
             <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn" style="background-color: #16a34a; color: #ffffff; font-weight: 800; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-size: 0.85rem; text-decoration: none;">
               <span>أرسل كود طلبك على واتساب 💬</span>
             </a>
           `;
         }
+        
+        waBtnHTML += `
+          <a href="../track-order?id=${encodeURIComponent(ref)}" class="btn" style="background: linear-gradient(135deg, #f59e0b, #e11d48); color: #ffffff; font-weight: 900; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; font-size: 0.9rem; text-decoration: none; margin-top: 10px; box-shadow: 0 4px 12px rgba(225,29,72,0.3);">
+            <span>🚚 تتبع حالة الطلب التفاعلية والعد التنازلي</span>
+          </a>
+        `;
+
+        waContainer.innerHTML = waBtnHTML;
 
         document.getElementById('checkout-form-state').classList.add('hide');
         document.getElementById('success-state').classList.remove('hide');
