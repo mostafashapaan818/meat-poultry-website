@@ -374,6 +374,8 @@
               isInitialLoad = false;
             } else if (newOrdersFound.length > 0) {
               playOrderChime();
+              setTimeout(playOrderChime, 700);
+              setTimeout(playOrderChime, 1400);
               newOrdersFound.forEach(o => {
                 showToast(`🎉 طلب جديد وصل! رقم #${o.id} - ${o.customer_name} (${o.total.toLocaleString()} ج.م)`, 'success', 7000);
                 triggerWebNotification('🔔 طلب جديد في ديليشس ميتس!', `وصل طلب جديد بقيمة ${o.total.toLocaleString()} ج.م من ${o.customer_name}`);

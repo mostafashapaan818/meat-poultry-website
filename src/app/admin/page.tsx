@@ -337,7 +337,11 @@ export default function AdminDashboard() {
             if (isOrdersInitializedRef.current) {
               merged.forEach((o) => {
                 if (!knownOrderIdsRef.current.has(o.id) && o.status === "new") {
+                  // Play immediate chime alarm 3 times to guarantee mobile playback upon order arrival
                   playOrderChime();
+                  setTimeout(() => playOrderChime(), 700);
+                  setTimeout(() => playOrderChime(), 1400);
+
                   setNewOrderAlert(o);
                   triggerWebNotification(o.customerName, o.id, o.totalValue);
                 }
@@ -1081,7 +1085,6 @@ export default function AdminDashboard() {
           <div className="flex flex-col gap-1.5 shrink-0">
             <button
               onClick={() => {
-                playOrderChime();
                 setNewOrderAlert(null);
                 setActiveTab("orders");
               }}
