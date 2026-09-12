@@ -1270,8 +1270,8 @@ export default function AdminDashboard() {
                   </h2>
                   <p className="text-xs text-dark-text-muted mt-1">
                     {language === "ar" 
-                      ? "يمكنك تعديل أطباق ومكونات وطريقة تحضير وصور كل يوم من أيام الأسبوع وتحدث مباشرة في الموقع." 
-                      : "Edit dishes, ingredients, instructions, and images for each day of the week."}
+                      ? "يمكنك تعديل أطباق ومكونات وطريقة تحضير وصور كل يوم من أيام الشهر (31 طبق) وتحدث مباشرة في الموقع." 
+                      : "Edit dishes, ingredients, instructions, and images for all 31 days of the month."}
                   </p>
                 </div>
               </div>

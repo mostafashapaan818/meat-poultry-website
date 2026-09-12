@@ -24,7 +24,12 @@ async function fetchAllRecipes(): Promise<DailyRecipe[]> {
     if (res.ok) {
       const json = await res.json();
       if (json && json.data && Array.isArray(json.data.recipes) && json.data.recipes.length > 0) {
-        localMemoryRecipes = json.data.recipes;
+        const map = new Map<number, DailyRecipe>();
+        defaultDailyRecipes.forEach(r => map.set(r.dayIndex, r));
+        json.data.recipes.forEach((r: DailyRecipe) => {
+          if (r && typeof r.dayIndex === "number") map.set(r.dayIndex, r);
+        });
+        localMemoryRecipes = Array.from(map.values()).sort((a, b) => a.dayIndex - b.dayIndex);
         return localMemoryRecipes;
       }
     }

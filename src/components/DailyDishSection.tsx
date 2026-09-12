@@ -12,14 +12,21 @@ import { Clock, Users, Sparkles, ChefHat, CheckCircle2, ArrowLeft, ArrowRight, B
 export default function DailyDishSection() {
   const { language, dir } = useLanguage();
   const [recipes, setRecipes] = useState<DailyRecipe[]>(getStoredDailyRecipes());
-  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(6); // Default Saturday
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<"ingredients" | "instructions">("ingredients");
   const [isCutModalOpen, setIsCutModalOpen] = useState<boolean>(false);
 
+  // Calculate total days in current month (e.g., 28, 30, or 31 days)
+  const totalDaysInMonth = React.useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  }, []);
+
   useEffect(() => {
-    // Set active day to today's day of week
-    const todayIndex = new Date().getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
-    setSelectedDayIndex(todayIndex);
+    // Set active day to today's date of month (1 to 31)
+    const todayDate = new Date().getDate();
+    const validDay = Math.min(todayDate, totalDaysInMonth);
+    setSelectedDayIndex(validDay);
     
     // Load from localStorage first, then fetch live from API
     const loaded = getStoredDailyRecipes();
@@ -33,7 +40,7 @@ export default function DailyDishSection() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [totalDaysInMonth]);
 
   // Listen to custom storage update event if updated in dashboard
   useEffect(() => {
@@ -46,18 +53,20 @@ export default function DailyDishSection() {
 
   const currentRecipe = recipes.find((r) => r.dayIndex === selectedDayIndex) || recipes[0];
 
-  // Days order array matching Sat (6), Sun (0), Mon (1), Tue (2), Wed (3), Thu (4), Fri (5)
-  const daysOrder = [
-    { index: 6, labelAr: "السبت", labelEn: "Sat" },
-    { index: 0, labelAr: "الأحد", labelEn: "Sun" },
-    { index: 1, labelAr: "الإثنين", labelEn: "Mon" },
-    { index: 2, labelAr: "الثلاثاء", labelEn: "Tue" },
-    { index: 3, labelAr: "الأربعاء", labelEn: "Wed" },
-    { index: 4, labelAr: "الخميس", labelEn: "Thu" },
-    { index: 5, labelAr: "الجمعة", labelEn: "Fri" },
-  ];
+  // Month Days navigation array (Day 1 through Day of current month)
+  const daysOrder = React.useMemo(() => {
+    const list = [];
+    for (let d = 1; d <= totalDaysInMonth; d++) {
+      list.push({
+        index: d,
+        labelAr: `يوم ${d}`,
+        labelEn: `Day ${d}`
+      });
+    }
+    return list;
+  }, [totalDaysInMonth]);
 
-  const todayIndex = typeof window !== "undefined" ? new Date().getDay() : 6;
+  const todayDateNumber = typeof window !== "undefined" ? new Date().getDate() : 1;
 
   return (
     <section className="py-16 sm:py-24 bg-[radial-gradient(ellipse_at_bottom,rgba(212,175,55,0.05),transparent_70%)] relative border-b border-dark-border">
@@ -67,31 +76,31 @@ export default function DailyDishSection() {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-xs font-bold text-primary mb-3 shadow-inner">
             <ChefHat className="h-4 w-4" />
-            <span>{language === "ar" ? "وصفة اليوم الشيف" : "Chef's Daily Special"}</span>
+            <span>{language === "ar" ? "جدول أطباق الشهر" : "Monthly Chef Special"}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight flex items-center justify-center gap-2">
-            <span>{language === "ar" ? "طبق اليوم ووصفات الأسبوع" : "Dish of the Day & Weekly Recipes"}</span>
+            <span>{language === "ar" ? "طبق اليوم ووصفات الشهر (٣١ طبق)" : "Dish of the Day & Monthly Recipes (31 Dishes)"}</span>
           </h2>
           <p className="text-xs sm:text-sm text-dark-text-muted mt-2 leading-relaxed">
             {language === "ar"
-              ? "استمتع كل يوم بوصفة مختلفة فاخرة من مطبخ ديليشس ميتس مع المكونات المقترحة وطريقة التحضير خطوة بخطوة."
-              : "Discover a delicious new gourmet recipe every single day with suggested ingredients and step-by-step preparation guides."}
+              ? "استمتع يومياً بوصفة مختلفة فاخرة على مدار الشهر كاملاً (من يوم 1 إلى 31) مع المقادير وطريقة التحضير خطوة بخطوة."
+              : "Discover a delicious new gourmet recipe for every single day of the month (Days 1 to 31) with ingredients and step-by-step guides."}
           </p>
         </div>
 
         {/* Days Navigation Bar */}
         <div className="flex justify-center mb-10">
-          <div className="bg-dark-surface/80 p-1.5 rounded-2xl border border-dark-border flex flex-wrap gap-1.5 sm:gap-2 justify-center max-w-full overflow-x-auto shadow-2xl">
+          <div className="bg-dark-surface/80 p-2 rounded-2xl border border-dark-border flex items-center gap-1.5 max-w-full overflow-x-auto shadow-2xl no-scrollbar scroll-smooth">
             {daysOrder.map((day) => {
               const isSelected = selectedDayIndex === day.index;
-              const isToday = todayIndex === day.index;
+              const isToday = todayDateNumber === day.index;
               const label = language === "ar" ? day.labelAr : day.labelEn;
 
               return (
                 <button
                   key={day.index}
                   onClick={() => setSelectedDayIndex(day.index)}
-                  className={`relative px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center gap-1.5 ${
+                  className={`relative shrink-0 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 flex items-center gap-1.5 ${
                     isSelected
                       ? "bg-primary text-dark-bg shadow-lg shadow-primary/25 scale-[1.03]"
                       : "text-gray-400 hover:text-white hover:bg-dark-bg/60"
