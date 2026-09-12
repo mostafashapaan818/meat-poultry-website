@@ -118,6 +118,8 @@ interface MockOrder {
   totalValue: number;
   status: "new" | "preparing" | "delivering" | "delivered" | "cancelled";
   createdAt: string;
+  contactedVia?: "whatsapp" | "phone" | null;
+  contactedAt?: string | null;
 }
 
 // Initial mock orders to populate if localStorage is empty
@@ -423,6 +425,24 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error("API update order status error:", err);
     }
+  };
+
+  // Mark order customer as contacted via WhatsApp or Phone Call
+  const handleMarkContacted = (orderId: string, method: "whatsapp" | "phone") => {
+    const updated = orders.map((order) => {
+      if (order.id === orderId) {
+        return {
+          ...order,
+          contactedVia: method,
+          contactedAt: new Date().toLocaleTimeString(language === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" })
+        };
+      }
+      return order;
+    });
+    setOrders(updated);
+    try {
+      localStorage.setItem("delicious_meats_orders", JSON.stringify(updated));
+    } catch (e) {}
   };
 
   // Delete product
@@ -1254,23 +1274,70 @@ export default function AdminDashboard() {
                         </span>
                       </div>
 
-                      {/* Customer Details info */}
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-start gap-2">
-                          <span className="text-primary font-bold">👤</span>
-                          <div>
-                            <span className="text-white font-bold block">{order.customerName}</span>
-                            <a
-                              href={`tel:${order.phone}`}
-                              className="text-primary font-medium hover:underline flex items-center gap-1 mt-0.5"
-                            >
-                              <Phone className="h-3.5 w-3.5" />
-                              <span dir="ltr">{order.phone}</span>
-                            </a>
+                      {/* Customer Details info & Contact Actions */}
+                      <div className="space-y-3 text-xs">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2">
+                            <span className="text-primary font-bold">👤</span>
+                            <div>
+                              <span className="text-white font-bold block">{order.customerName}</span>
+                              <a
+                                href={`tel:${order.phone}`}
+                                onClick={() => handleMarkContacted(order.id, "phone")}
+                                className="text-primary font-medium hover:underline flex items-center gap-1 mt-0.5"
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                                <span dir="ltr">{order.phone}</span>
+                              </a>
+                            </div>
                           </div>
+
+                          {/* Contact Status Badge Indicator */}
+                          {order.contactedVia && (
+                            <span
+                              className={`px-2 py-1 rounded-lg text-[10px] font-black border flex items-center gap-1 shrink-0 ${
+                                order.contactedVia === "whatsapp"
+                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                  : "bg-blue-500/20 text-blue-300 border-blue-500/40"
+                              }`}
+                              title={order.contactedAt ? `تم في ${order.contactedAt}` : ""}
+                            >
+                              {order.contactedVia === "whatsapp" ? "🟢 تم التواصل واتساب ✓" : "🔵 تم الاتصال هاتفياً ✓"}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex items-start gap-2">
+                        {/* Customer Contact Action Buttons (WhatsApp & Call) */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cleanPhone = order.phone.replace(/\D/g, "");
+                              const phoneWithCountry = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
+                              const msg = `أهلاً بك يا ${order.customerName}، معكم متجر ديليشس ميتس 🥩 بخصوص طلبكم رقم #${order.id} بقيمة ${order.totalValue} ج.م`;
+                              window.open(`https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`, "_blank");
+                              handleMarkContacted(order.id, "whatsapp");
+                            }}
+                            className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600 hover:text-white font-bold text-xs transition-all active:scale-95 cursor-pointer shadow-sm"
+                          >
+                            <span>💬</span>
+                            <span>{language === "ar" ? "تواصل واتساب" : "WhatsApp"}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.location.href = `tel:${order.phone}`;
+                              handleMarkContacted(order.id, "phone");
+                            }}
+                            className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/40 hover:bg-blue-600 hover:text-white font-bold text-xs transition-all active:scale-95 cursor-pointer shadow-sm"
+                          >
+                            <span>📞</span>
+                            <span>{language === "ar" ? "اتصال هاتفياً" : "Call Phone"}</span>
+                          </button>
+                        </div>
+
+                        <div className="flex items-start gap-2 pt-1 border-t border-dark-border/40">
                           <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                           <span className="text-gray-300 leading-normal">
                             {order.governorate}, {order.area}, {order.address}

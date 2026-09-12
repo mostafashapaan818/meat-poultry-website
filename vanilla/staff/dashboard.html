@@ -396,6 +396,17 @@
       document.getElementById(`panel-${tab}`).classList.add('active');
     }
 
+    function markContacted(orderId, method) {
+      const idx = orders.findIndex(o => o.id === orderId);
+      if (idx !== -1) {
+        orders[idx].contacted_via = method;
+        orders[idx].contactedVia = method;
+        localStorage.setItem('dm_orders', JSON.stringify(orders));
+        localStorage.setItem('delicious_meats_orders', JSON.stringify(orders));
+        renderOrders();
+      }
+    }
+
     // ── Status label ──
     function statusLabel(status) {
       const lang = i18n.getLang();
@@ -422,6 +433,8 @@
         const dateStr = new Date(order.created_at || Date.now())
           .toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-US', { hour:'2-digit', minute:'2-digit' });
 
+        const contactedStatus = order.contacted_via || order.contactedVia;
+
         const card = document.createElement('div');
         card.className = 'order-card';
         card.innerHTML = `
@@ -433,12 +446,38 @@
             <span class="status-badge status-${order.status}">${statusLabel(order.status)}</span>
           </div>
           <div class="order-card-body">
-            <div class="order-customer">
+            <div class="order-customer" style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">
               <div>
                 <div class="order-customer-name">${order.customer_name}</div>
-                <a class="order-customer-meta" href="tel:${order.phone}">📞 ${order.phone}</a>
+                <a class="order-customer-meta" href="tel:${order.phone}" onclick="markContacted('${order.id}', 'phone')">📞 ${order.phone}</a>
               </div>
+              ${contactedStatus ? `
+                <span style="font-size:.7rem;font-weight:bold;padding:.2rem .5rem;border-radius:.4rem;background:${contactedStatus === 'whatsapp' ? 'rgba(37,211,102,0.15)' : 'rgba(59,130,246,0.15)'};color:${contactedStatus === 'whatsapp' ? '#25D366' : '#60a5fa'};border:1px solid ${contactedStatus === 'whatsapp' ? 'rgba(37,211,102,0.3)' : 'rgba(59,130,246,0.3)'}">
+                  ${contactedStatus === 'whatsapp' ? '🟢 تم التواصل واتساب ✓' : '🔵 تم الاتصال هاتفياً ✓'}
+                </span>
+              ` : ''}
             </div>
+
+            <!-- Customer Contact Quick Buttons -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.6rem 0;">
+              <button class="btn btn-sm" onclick="
+                const cleanPhone = '${order.phone}'.replace(/\\D/g, '');
+                const phoneWithCountry = cleanPhone.startsWith('0') ? '2' + cleanPhone : cleanPhone;
+                const msg = 'أهلاً بك يا ${order.customer_name}، معكم متجر ديليشس ميتس 🥩 بخصوص طلبكم رقم #${order.id} بقيمة ${order.total} ج.م';
+                window.open('https://wa.me/' + phoneWithCountry + '?text=' + encodeURIComponent(msg), '_blank');
+                markContacted('${order.id}', 'whatsapp');
+              " style="background:rgba(37,211,102,0.15);color:#25D366;border:1px solid rgba(37,211,102,0.3);font-size:.75rem;font-weight:bold;padding:.4rem;cursor:pointer;">
+                💬 تواصل واتساب
+              </button>
+
+              <button class="btn btn-sm" onclick="
+                window.location.href = 'tel:${order.phone}';
+                markContacted('${order.id}', 'phone');
+              " style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);font-size:.75rem;font-weight:bold;padding:.4rem;cursor:pointer;">
+                📞 اتصال هاتفياً
+              </button>
+            </div>
+
             <div class="order-address">
               📍 ${order.governorate}، ${order.area}، ${order.address_details}
             </div>
