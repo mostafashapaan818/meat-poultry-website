@@ -27,6 +27,19 @@
 
             <!-- Left: Form -->
             <div class="checkout-form-card">
+              <!-- Free delivery info header banner -->
+              <div style="background: rgba(225, 29, 72, 0.1); border: 1px solid rgba(225, 29, 72, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 1.5rem;">
+                <div style="font-size: 0.85rem; font-weight: 900; color: #e11d48; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                  <span>🎉</span> <span>التوصيل مجاني للمناطق التالية:</span>
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f3f4f6;">
+                  (مدينة نصر • التجمع • مصر الجديدة)
+                </div>
+                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">
+                  للمناطق الأخرى داخل القاهرة والجيزة، سيتم تحديد وتأكيد رسوم التوصيل معكم عبر الواتساب.
+                </div>
+              </div>
+
               <h2 data-i18n="checkoutSubtitle">بيانات الشحن والتوصيل</h2>
 
               <form id="checkout-form" novalidate>
@@ -61,9 +74,14 @@
                   <label class="form-label" for="f-area">
                     <span data-i18n="fieldArea">المنطقة / الحي</span> <span class="req">*</span>
                   </label>
-                  <input id="f-area" type="text" class="form-input" data-i18n="fieldAreaPH" placeholder="مثال: المعادي، مصر الجديدة..." autocomplete="address-level2">
+                  <select id="f-area" class="form-select">
+                    <option value="">اختر المنطقة</option>
+                  </select>
                   <div class="form-error" id="err-area"></div>
                 </div>
+
+                <!-- Delivery notice alert block -->
+                <div id="delivery-notice" style="margin-top:-0.5rem; margin-bottom:1rem;"></div>
 
                 <div class="form-group">
                   <label class="form-label" for="f-address">
@@ -115,15 +133,26 @@
             <div class="success-icon">✓</div>
             <h2 data-i18n="successTitle">تم استلام طلبك بنجاح! 🎉</h2>
             <p data-i18n="successDesc">شكراً لتسوقك من ديليشس ميتس. سيتواصل معك أحد ممثلينا لتأكيد موعد التوصيل.</p>
+            
             <div class="success-ref">
               <div class="label" data-i18n="orderRef">رقم الطلب المرجعي</div>
               <div class="ref" id="order-ref-display">—</div>
             </div>
+
+            <div class="success-ref">
+              <div class="label">حالة رسوم التوصيل</div>
+              <div class="ref" id="order-delivery-status-display">—</div>
+            </div>
+
             <div class="success-ref" style="margin-bottom:0">
               <div class="label" data-i18n="payMethod">طريقة الدفع</div>
               <div class="ref" data-i18n="cashOnDelivery">نقداً عند الاستلام</div>
             </div>
-            <a href="index.html" class="btn btn-primary" style="margin-top:1.5rem">
+
+            <!-- Dynamic WhatsApp Inquiry button -->
+            <div id="whatsapp-btn-container" style="margin-top:1.5rem"></div>
+
+            <a href="index.html" class="btn btn-primary" style="margin-top:1rem; display:inline-block;">
               ← <span data-i18n="keepShopping">الاستمرار في التسوق</span>
             </a>
           </div>
@@ -140,6 +169,90 @@
   <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
   <script>
+    const AREAS_BY_GOVERNORATE = {
+      Cairo: [
+        { ar: "مدينة نصر", en: "Nasr City", isFree: true },
+        { ar: "التجمع (القاهرة الجديدة)", en: "El Tagamoa (New Cairo)", isFree: true },
+        { ar: "مصر الجديدة", en: "Heliopolis", isFree: true },
+        { ar: "المعادي", en: "Maadi", isFree: false },
+        { ar: "الزمالك", en: "Zamalek", isFree: false },
+        { ar: "وسط البلد", en: "Downtown", isFree: false },
+        { ar: "الشروق", en: "El Shorouk", isFree: false },
+        { ar: "مدينتي", en: "Madinaty", isFree: false },
+        { ar: "الرحاب", en: "El Rehab", isFree: false },
+        { ar: "شبرا", en: "Shubra", isFree: false },
+        { ar: "العباسية", en: "Abbassia", isFree: false },
+        { ar: "المقطم", en: "Mokattam", isFree: false },
+        { ar: "عين شمس", en: "Ain Shams", isFree: false },
+        { ar: "الزيتون", en: "El Zeitoun", isFree: false },
+        { ar: "منطقة أخرى بالقاهرة", en: "Other Cairo Area", isFree: false }
+      ],
+      Giza: [
+        { ar: "الدقي", en: "Dokki", isFree: false },
+        { ar: "المهندسين", en: "Mohandessin", isFree: false },
+        { ar: "الشيخ زايد", en: "Sheikh Zayed", isFree: false },
+        { ar: "٦ أكتوبر", en: "6th of October", isFree: false },
+        { ar: "الهرم", en: "Haram", isFree: false },
+        { ar: "فيصل", en: "Faisal", isFree: false },
+        { ar: "العجوزة", en: "Agouza", isFree: false },
+        { ar: "حدائق الأهرام", en: "Haram Gardens", isFree: false },
+        { ar: "منطقة أخرى بالجيزة", en: "Other Giza Area", isFree: false }
+      ]
+    };
+
+    function checkIsFreeArea(selectedArea) {
+      if (!selectedArea) return false;
+      const freeKeys = ["مدينة نصر", "nasr city", "التجمع", "el tagamoa", "new cairo", "مصر الجديدة", "heliopolis"];
+      return freeKeys.some(key => selectedArea.toLowerCase().includes(key));
+    }
+
+    function populateAreaSelect(govKey) {
+      const areaSelect = document.getElementById('f-area');
+      const lang = i18n.getLang();
+      areaSelect.innerHTML = `<option value="">${lang === 'ar' ? '-- اختر المنطقة --' : '-- Select Area --'}</option>`;
+      
+      const areas = AREAS_BY_GOVERNORATE[govKey] || AREAS_BY_GOVERNORATE.Cairo;
+      areas.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.ar;
+        const freeTag = a.isFree ? (lang === 'ar' ? ' (توصيل مجاني 🎉)' : ' (Free Delivery 🎉)') : '';
+        opt.textContent = (lang === 'ar' ? a.ar : a.en) + freeTag;
+        areaSelect.appendChild(opt);
+      });
+
+      updateDeliveryNotice();
+    }
+
+    function updateDeliveryNotice() {
+      const selectedArea = document.getElementById('f-area').value;
+      const noticeDiv = document.getElementById('delivery-notice');
+      const lang = i18n.getLang();
+
+      if (!selectedArea) {
+        noticeDiv.innerHTML = '';
+        renderCheckoutSummary();
+        return;
+      }
+
+      const isFree = checkIsFreeArea(selectedArea);
+      if (isFree) {
+        noticeDiv.innerHTML = `
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: bold;">
+            🎉 ${lang === 'ar' ? `التوصيل مجاني لهذه المنطقة (${selectedArea})!` : `Free delivery for this area (${selectedArea})!`}
+          </div>`;
+      } else {
+        noticeDiv.innerHTML = `
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 12px 14px; border-radius: 10px; font-size: 0.8rem; line-height: 1.4;">
+            <strong style="display:block; margin-bottom:2px; font-size:0.85rem;">💬 ${lang === 'ar' ? 'تنبيه رسوم التوصيل:' : 'Delivery Fee Notice:'}</strong>
+            ${lang === 'ar' 
+              ? `التوصيل مجاني لمناطق (مدينة نصر، التجمع، مصر الجديدة). بالنسبة لمنطقة (${selectedArea}) يتم تحديد رسوم التوصيل لاحقاً وتأكيدها معكم فور الطلب.`
+              : `Free delivery is exclusive to Nasr City, El Tagamoa, and Heliopolis. For (${selectedArea}), delivery fee will be confirmed later.`}
+          </div>`;
+      }
+
+      renderCheckoutSummary();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       injectHeader();
       injectFooter();
@@ -151,13 +264,26 @@
         return;
       }
 
-      buildGovernoratesSelect(document.getElementById('f-gov'));
+      const govSelect = document.getElementById('f-gov');
+      buildGovernoratesSelect(govSelect);
+      
+      // Default to Cairo governorate
+      govSelect.value = 'Cairo';
+      populateAreaSelect('Cairo');
+
+      govSelect.addEventListener('change', (e) => {
+        populateAreaSelect(e.target.value);
+      });
+
+      document.getElementById('f-area').addEventListener('change', updateDeliveryNotice);
+
       renderCheckoutSummary();
 
       document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
 
       window.addEventListener('langchange', () => {
         buildGovernoratesSelect(document.getElementById('f-gov'));
+        populateAreaSelect(document.getElementById('f-gov').value || 'Cairo');
         renderCheckoutSummary();
       });
     });
@@ -185,12 +311,19 @@
       });
 
       const sub = Cart.getSubtotal();
-      const del = Cart.getDeliveryFee();
       const tot = Cart.getTotal();
+      const selectedArea = document.getElementById('f-area') ? document.getElementById('f-area').value : '';
+      const isFree = checkIsFreeArea(selectedArea);
+
       document.getElementById('co-subtotal').textContent = `${sub.toLocaleString()} ${egp}`;
-      document.getElementById('co-delivery').innerHTML   = del === 0
-        ? `<span class="free">${i18n.t('deliveryFree')}</span>`
-        : `${del.toLocaleString()} ${egp}`;
+      
+      const delEl = document.getElementById('co-delivery');
+      if (!selectedArea || isFree) {
+        delEl.innerHTML = `<span class="free" style="color:#10b981; font-weight:bold;">${i18n.t('deliveryFree')} 🎉</span>`;
+      } else {
+        delEl.innerHTML = `<span style="color:#f59e0b; font-weight:bold;">${lang === 'ar' ? 'سيتم التحديد لاحقاً 💬' : 'To be confirmed 💬'}</span>`;
+      }
+
       document.getElementById('co-total').textContent = `${tot.toLocaleString()} ${egp}`;
     }
 
@@ -216,7 +349,7 @@
       ok = validateField('f-name',    'err-name',    v => v.length >= 2, required) && ok;
       ok = validateField('f-phone',   'err-phone',   v => EG_PHONE.test(v), invalidPhone) && ok;
       ok = validateField('f-gov',     'err-gov',     v => v !== '', required) && ok;
-      ok = validateField('f-area',    'err-area',    v => v.length >= 2, required) && ok;
+      ok = validateField('f-area',    'err-area',    v => v !== '', required) && ok;
       ok = validateField('f-address', 'err-address', v => v.length >= 5, required) && ok;
       return ok;
     }
@@ -233,13 +366,21 @@
       const items  = Cart.getItems();
       const lang   = i18n.getLang();
       const ref    = generateOrderRef();
+      const govVal = document.getElementById('f-gov').value;
+      const govName = govVal === 'Cairo' ? 'القاهرة' : 'الجيزة';
+      const areaVal = document.getElementById('f-area').value.trim();
+      const addressVal = document.getElementById('f-address').value.trim();
+      const custName = document.getElementById('f-name').value.trim();
+      const phoneVal = document.getElementById('f-phone').value.trim();
+      const isFree = checkIsFreeArea(areaVal);
+
       const order  = {
         id: ref,
-        customer_name:   document.getElementById('f-name').value.trim(),
-        phone:           document.getElementById('f-phone').value.trim(),
-        governorate:     document.getElementById('f-gov').value,
-        area:            document.getElementById('f-area').value.trim(),
-        address_details: document.getElementById('f-address').value.trim(),
+        customer_name:   custName,
+        phone:           phoneVal,
+        governorate:     govVal,
+        area:            areaVal,
+        address_details: addressVal,
         items: items.map(i => ({
           product_id: i.id,
           name_ar: i.name_ar, name_en: i.name_en,
@@ -265,10 +406,44 @@
         }).catch(err => console.error(err));
       } catch (e) {}
 
-      // Simulate a brief "network" delay
+      // Simulate network delay
       setTimeout(() => {
         Cart.clear();
         document.getElementById('order-ref-display').textContent = ref;
+        
+        const statusEl = document.getElementById('order-delivery-status-display');
+        if (isFree) {
+          statusEl.textContent = "توصيل مجاني 🎉";
+          statusEl.style.color = "#10b981";
+        } else {
+          statusEl.textContent = "رسوم التوصيل تتحدد لاحقاً 💬";
+          statusEl.style.color = "#f59e0b";
+        }
+
+        // WhatsApp message & button
+        let waMsg = "";
+        if (!isFree) {
+          waMsg = `مرحباً، أود الاستفسار عن رسوم التوصيل لطلبي رقم: #${ref}\nاسم العميل: ${custName}\nالعنوان: ${govName} - ${areaVal} - ${addressVal}`;
+        } else {
+          waMsg = `مرحباً، كود طلبي هو: #${ref}\nاسم العميل: ${custName}\nالعنوان: ${govName} - ${areaVal}`;
+        }
+        const waUrl = `https://wa.me/201092719920?text=${encodeURIComponent(waMsg)}`;
+
+        const waContainer = document.getElementById('whatsapp-btn-container');
+        if (!isFree) {
+          waContainer.innerHTML = `
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn" style="background-color: #059669; color: #ffffff; font-weight: 900; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; font-size: 0.95rem; text-decoration: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">
+              <span>الاستفسار عن رسوم التوصيل 💬</span>
+            </a>
+          `;
+        } else {
+          waContainer.innerHTML = `
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn" style="background-color: #16a34a; color: #ffffff; font-weight: 800; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 12px; font-size: 0.85rem; text-decoration: none;">
+              <span>أرسل كود طلبك على واتساب 💬</span>
+            </a>
+          `;
+        }
+
         document.getElementById('checkout-form-state').classList.add('hide');
         document.getElementById('success-state').classList.remove('hide');
         window.scrollTo({ top: 0, behavior: 'smooth' });

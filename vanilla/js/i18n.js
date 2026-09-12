@@ -338,10 +338,10 @@ const TRANSLATIONS = {
   }
 };
 
-// Egyptian Governorates list
+// Egyptian Governorates list (Cairo and Giza only)
 const GOVERNORATES = {
-  ar: ['القاهرة','الجيزة','الإسكندرية','القليوبية','الدقهلية','الشرقية','المنوفية','الغربية','البحيرة','كفر الشيخ','دمياط','بورسعيد','الإسماعيلية','السويس','الفيوم','بني سويف','المنيا','أسيوط','سوهاج','قنا','الأقصر','أسوان','البحر الأحمر','الوادي الجديد','مطروح','شمال سيناء','جنوب سيناء'],
-  en: ['Cairo','Giza','Alexandria','Qalyubia','Dakahlia','Sharkia','Monufia','Gharbia','Beheira','Kafr El Sheikh','Damietta','Port Said','Ismailia','Suez','Fayoum','Beni Suef','Minya','Assiut','Sohag','Qena','Luxor','Aswan','Red Sea','New Valley','Matrouh','North Sinai','South Sinai']
+  ar: ['القاهرة','الجيزة'],
+  en: ['Cairo','Giza']
 };
 
 // ──────────────────────────────────────────────

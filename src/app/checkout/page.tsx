@@ -8,37 +8,49 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { CheckCircle2, ChevronRight, ChevronLeft, CreditCard, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 
-// List of all 27 Egyptian governorates
+// List of allowed delivery governorates (Cairo and Giza only)
 const GOVERNORATES = [
   { ar: "القاهرة", en: "Cairo" },
-  { ar: "الجيزة", en: "Giza" },
-  { ar: "الإسكندرية", en: "Alexandria" },
-  { ar: "القليوبية", en: "Qalyubia" },
-  { ar: "الدقهلية", en: "Dakahlia" },
-  { ar: "الشرقية", en: "Sharkia" },
-  { ar: "المنوفية", en: "Monufia" },
-  { ar: "الغربية", en: "Gharbia" },
-  { ar: "البحيرة", en: "Beheira" },
-  { ar: "كفر الشيخ", en: "Kafr El Sheikh" },
-  { ar: "دمياط", en: "Damietta" },
-  { ar: "بورسعيد", en: "Port Said" },
-  { ar: "الإسماعيلية", en: "Ismailia" },
-  { ar: "السويس", en: "Suez" },
-  { ar: "الشرقية", en: "Sharkia" },
-  { ar: "الفيوم", en: "Fayoum" },
-  { ar: "بني سويف", en: "Beni Suef" },
-  { ar: "المنيا", en: "Minya" },
-  { ar: "أسيوط", en: "Assiut" },
-  { ar: "سوهاج", en: "Sohag" },
-  { ar: "قنا", en: "Qena" },
-  { ar: "الأقصر", en: "Luxor" },
-  { ar: "أسوان", en: "Aswan" },
-  { ar: "البحر الأحمر", en: "Red Sea" },
-  { ar: "الوادي الجديد", en: "New Valley" },
-  { ar: "مطروح", en: "Matrouh" },
-  { ar: "شمال سيناء", en: "North Sinai" },
-  { ar: "جنوب سيناء", en: "South Sinai" },
+  { ar: "الجيزة", en: "Giza" }
 ];
+
+// Dependent Areas list for Cairo and Giza with Free Delivery markers
+const AREAS_BY_GOVERNORATE: Record<string, { ar: string; en: string; isFree: boolean }[]> = {
+  Cairo: [
+    { ar: "مدينة نصر", en: "Nasr City", isFree: true },
+    { ar: "التجمع (القاهرة الجديدة)", en: "El Tagamoa (New Cairo)", isFree: true },
+    { ar: "مصر الجديدة", en: "Heliopolis", isFree: true },
+    { ar: "المعادي", en: "Maadi", isFree: false },
+    { ar: "الزمالك", en: "Zamalek", isFree: false },
+    { ar: "وسط البلد", en: "Downtown", isFree: false },
+    { ar: "الشروق", en: "El Shorouk", isFree: false },
+    { ar: "مدينتي", en: "Madinaty", isFree: false },
+    { ar: "الرحاب", en: "El Rehab", isFree: false },
+    { ar: "شبرا", en: "Shubra", isFree: false },
+    { ar: "العباسية", en: "Abbassia", isFree: false },
+    { ar: "المقطم", en: "Mokattam", isFree: false },
+    { ar: "عين شمس", en: "Ain Shams", isFree: false },
+    { ar: "الزيتون", en: "El Zeitoun", isFree: false },
+    { ar: "منطقة أخرى بالقاهرة", en: "Other Cairo Area", isFree: false },
+  ],
+  Giza: [
+    { ar: "الدقي", en: "Dokki", isFree: false },
+    { ar: "المهندسين", en: "Mohandessin", isFree: false },
+    { ar: "الشيخ زايد", en: "Sheikh Zayed", isFree: false },
+    { ar: "٦ أكتوبر", en: "6th of October", isFree: false },
+    { ar: "الهرم", en: "Haram", isFree: false },
+    { ar: "فيصل", en: "Faisal", isFree: false },
+    { ar: "العجوزة", en: "Agouza", isFree: false },
+    { ar: "حدائق الأهرام", en: "Haram Gardens", isFree: false },
+    { ar: "منطقة أخرى بالجيزة", en: "Other Giza Area", isFree: false },
+  ]
+};
+
+const checkIsFreeArea = (selectedArea: string) => {
+  if (!selectedArea) return false;
+  const freeKeys = ["مدينة نصر", "nasr city", "التجمع", "el tagamoa", "new cairo", "مصر الجديدة", "heliopolis"];
+  return freeKeys.some(key => selectedArea.toLowerCase().includes(key));
+};
 
 export default function CheckoutPage() {
   const { t, language, dir } = useLanguage();
@@ -47,7 +59,7 @@ export default function CheckoutPage() {
   // Form states
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [governorate, setGovernorate] = useState("");
+  const [governorate, setGovernorate] = useState("Cairo");
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
 
@@ -56,6 +68,16 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderRef, setOrderRef] = useState("");
+
+  // Saved order info for success screen
+  const [lastOrderDetails, setLastOrderDetails] = useState<{
+    orderRef: string;
+    isFreeDelivery: boolean;
+    governorate: string;
+    area: string;
+    address: string;
+    name: string;
+  } | null>(null);
 
   // Validation logic
   const validateForm = () => {
@@ -98,6 +120,16 @@ export default function CheckoutPage() {
     const randRef = `DM-${Math.floor(100000 + Math.random() * 900000)}`;
     setOrderRef(randRef);
 
+    const isFree = checkIsFreeArea(area);
+    setLastOrderDetails({
+      orderRef: randRef,
+      isFreeDelivery: isFree,
+      governorate,
+      area,
+      address,
+      name
+    });
+
     const newOrder = {
       id: randRef,
       customerName: name,
@@ -126,7 +158,7 @@ export default function CheckoutPage() {
       console.error(err);
     }
 
-    // Send order to central backend API with multi-layer submission
+    // Send order to central backend API
     try {
       await fetch("/api/orders", {
         method: "POST",
@@ -137,96 +169,113 @@ export default function CheckoutPage() {
       console.error("API send order error:", err);
     }
 
-    // Direct backup POST to PHP MySQL URL if defined and secure
-    const phpUrl = process.env.NEXT_PUBLIC_PHP_API_URL;
-    if (phpUrl && phpUrl.startsWith("https")) {
-      try {
-        await fetch(phpUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newOrder)
-        });
-      } catch (err) {
-        console.error("Direct PHP POST error:", err);
-      }
-    }
-
     setIsSubmitting(false);
     setIsSuccess(true);
     clearCart();
   };
 
-  if (isSuccess) {
-    const whatsappMessage = encodeURIComponent(`مرحباً، كود طلبي هو: #${orderRef}`);
-    const whatsappUrl = `https://wa.me/201092719920?text=${whatsappMessage}`;
+  if (isSuccess && lastOrderDetails) {
+    const isFree = lastOrderDetails.isFreeDelivery;
+    
+    // Custom WhatsApp message & button label based on free vs paid area
+    let whatsappText = "";
+    if (!isFree) {
+      whatsappText = `مرحباً، أود الاستفسار عن رسوم التوصيل لطلبي رقم: #${lastOrderDetails.orderRef}\nاسم العميل: ${lastOrderDetails.name}\nالعنوان: ${lastOrderDetails.governorate} - ${lastOrderDetails.area} - ${lastOrderDetails.address}`;
+    } else {
+      whatsappText = `مرحباً، كود طلبي هو: #${lastOrderDetails.orderRef}\nاسم العميل: ${lastOrderDetails.name}\nالعنوان: ${lastOrderDetails.governorate} - ${lastOrderDetails.area}`;
+    }
+
+    const whatsappUrl = `https://wa.me/201092719920?text=${encodeURIComponent(whatsappText)}`;
 
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow py-16 bg-dark-bg flex items-center justify-center">
-          <div className="max-w-md w-full mx-auto px-6 py-12 bg-dark-surface border border-dark-border rounded-2xl text-center space-y-6 shadow-xl animate-in fade-in duration-300">
+          <div className="max-w-md w-full mx-auto px-6 py-10 bg-dark-surface border border-dark-border rounded-3xl text-center space-y-6 shadow-2xl animate-in fade-in duration-300">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto stroke-[2.5] animate-bounce" />
             
             <div className="space-y-2">
               <h1 className="text-2xl sm:text-3xl font-black text-white">{t("successTitle")}</h1>
-              <p className="text-sm text-dark-text-muted leading-relaxed">
+              <p className="text-xs text-dark-text-muted leading-relaxed">
                 {t("successSubtitle")}
               </p>
             </div>
 
-            <div className="bg-dark-bg border border-dark-border/80 rounded-xl p-4 divide-y divide-dark-border/40 text-sm">
+            <div className="bg-dark-bg border border-dark-border/80 rounded-2xl p-4 divide-y divide-dark-border/40 text-xs">
               <div className="py-2.5 flex items-center justify-between">
                 <span className="text-dark-text-muted">{t("orderRef")}</span>
-                <span className="font-extrabold text-primary">#{orderRef}</span>
+                <span className="font-extrabold text-primary text-sm">#{lastOrderDetails.orderRef}</span>
               </div>
               <div className="py-2.5 flex items-center justify-between">
-                <span className="text-dark-text-muted">{t("paymentMethod")}</span>
-                <span className="font-bold text-white">{t("paymentMethodVal")}</span>
+                <span className="text-dark-text-muted">المنطقة والعنوان:</span>
+                <span className="font-bold text-white text-right max-w-[200px] truncate">{lastOrderDetails.governorate} - {lastOrderDetails.area}</span>
+              </div>
+              <div className="py-2.5 flex items-center justify-between">
+                <span className="text-dark-text-muted">حالة التوصيل:</span>
+                <span className={`font-bold ${isFree ? "text-emerald-400" : "text-amber-400"}`}>
+                  {isFree ? "توصيل مجاني 🎉" : "رسوم التوصيل تتحدد لاحقاً 💬"}
+                </span>
               </div>
             </div>
 
             {/* QR Code & Digital Invoice Button */}
-            <div className="bg-dark-bg/80 border border-dark-border/80 rounded-xl p-4 text-center space-y-3">
+            <div className="bg-dark-bg/80 border border-dark-border/80 rounded-2xl p-4 text-center space-y-2">
               <div className="flex justify-center">
                 {/* eslint-disable-next-html-extension/next-image-unoptimized */}
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                    (typeof window !== "undefined" ? window.location.origin : "https://deliciousmeats.vercel.app") + `/invoice?id=${encodeURIComponent(orderRef)}`
+                    (typeof window !== "undefined" ? window.location.origin : "https://deliciousmeats.vercel.app") + `/invoice?id=${encodeURIComponent(lastOrderDetails.orderRef)}`
                   )}`}
-                  alt={`QR Code Invoice #${orderRef}`}
-                  className="w-24 h-24 object-contain rounded-lg bg-white p-1 shadow-md"
+                  alt={`QR Code Invoice #${lastOrderDetails.orderRef}`}
+                  className="w-20 h-20 object-contain rounded-lg bg-white p-1 shadow-md"
                 />
               </div>
-              <p className="text-[11px] text-gray-400 font-bold">
+              <p className="text-[10px] text-gray-400 font-bold">
                 📱 امسح كود الـ QR للوصول للفاتورة الرقمية وطباعتها أونلاين
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-2.5 pt-1">
+            <div className="space-y-3 pt-1">
+
+              {/* Special WhatsApp Inquiry Button for Custom Fee Areas */}
+              {!isFree ? (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-emerald-600 text-white font-black hover:bg-emerald-500 active:scale-95 transition-all duration-200 shadow-xl shadow-emerald-600/30 text-xs sm:text-sm animate-pulse"
+                >
+                  <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.555 4.197 1.608 6.02L.051 24l6.096-1.597c1.764.962 3.766 1.47 5.884 1.47 6.647 0 12.032-5.385 12.032-12.031S18.678 0 12.031 0zm6.541 17.001c-.274.773-1.359 1.416-2.215 1.596-.587.123-1.353.223-3.931-.844-3.3-1.365-5.426-4.71-5.59-4.93-.163-.22-1.336-1.78-1.336-3.396 0-1.616.844-2.41 1.144-2.738.3-.327.654-.409.873-.409.219 0 .437.003.627.013.201.01.47-.076.735.56.274.654.929 2.27.1009 2.434.081.164.136.356.027.573-.109.219-.164.355-.327.546-.164.191-.345.427-.148.766.196.338.871 1.437 1.87 2.327 1.285 1.144 2.368 1.5 2.707 1.664.338.164.536.136.733-.092.197-.228.844-.982 1.07-1.319.227-.338.455-.282.764-.164.309.119 1.961.925 2.298 1.093.338.164.563.246.646.382.082.137.082.793-.192 1.566z" />
+                  </svg>
+                  <span>الاستفسار عن رسوم التوصيل 💬</span>
+                </a>
+              ) : (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-green-600 text-white font-extrabold hover:bg-green-500 active:scale-95 transition-all duration-200 shadow-lg shadow-green-600/30 text-xs"
+                >
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.555 4.197 1.608 6.02L.051 24l6.096-1.597c1.764.962 3.766 1.47 5.884 1.47 6.647 0 12.032-5.385 12.032-12.031S18.678 0 12.031 0zm6.541 17.001c-.274.773-1.359 1.416-2.215 1.596-.587.123-1.353.223-3.931-.844-3.3-1.365-5.426-4.71-5.59-4.93-.163-.22-1.336-1.78-1.336-3.396 0-1.616.844-2.41 1.144-2.738.3-.327.654-.409.873-.409.219 0 .437.003.627.013.201.01.47-.076.735.56.274.654.929 2.27.1009 2.434.081.164.136.356.027.573-.109.219-.164.355-.327.546-.164.191-.345.427-.148.766.196.338.871 1.437 1.87 2.327 1.285 1.144 2.368 1.5 2.707 1.664.338.164.536.136.733-.092.197-.228.844-.982 1.07-1.319.227-.338.455-.282.764-.164.309.119 1.961.925 2.298 1.093.338.164.563.246.646.382.082.137.082.793-.192 1.566z" />
+                  </svg>
+                  <span>أرسل كود طلبك على واتساب</span>
+                </a>
+              )}
+
               <Link
-                href={`/invoice?id=${encodeURIComponent(orderRef)}`}
+                href={`/invoice?id=${encodeURIComponent(lastOrderDetails.orderRef)}`}
                 target="_blank"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-dark-bg font-extrabold hover:bg-primary-hover active:scale-95 transition-all duration-200 shadow-lg shadow-primary/20 text-xs"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-dark-bg font-extrabold hover:bg-primary-hover active:scale-95 transition-all duration-200 shadow-md text-xs"
               >
                 <span>📄 عرض وتنزيل الفاتورة PDF</span>
               </Link>
 
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-green-600 text-white font-extrabold hover:bg-green-500 active:scale-95 transition-all duration-200 shadow-lg shadow-green-600/30 text-xs"
-              >
-                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.555 4.197 1.608 6.02L.051 24l6.096-1.597c1.764.962 3.766 1.47 5.884 1.47 6.647 0 12.032-5.385 12.032-12.031S18.678 0 12.031 0zm6.541 17.001c-.274.773-1.359 1.416-2.215 1.596-.587.123-1.353.223-3.931-.844-3.3-1.365-5.426-4.71-5.59-4.93-.163-.22-1.336-1.78-1.336-3.396 0-1.616.844-2.41 1.144-2.738.3-.327.654-.409.873-.409.219 0 .437.003.627.013.201.01.47-.076.735.56.274.654.929 2.27.1009 2.434.081.164.136.356.027.573-.109.219-.164.355-.327.546-.164.191-.345.427-.148.766.196.338.871 1.437 1.87 2.327 1.285 1.144 2.368 1.5 2.707 1.664.338.164.536.136.733-.092.197-.228.844-.982 1.07-1.319.227-.338.455-.282.764-.164.309.119 1.961.925 2.298 1.093.338.164.563.246.646.382.082.137.082.793-.192 1.566z" />
-                </svg>
-                <span>أرسل كود طلبك على واتساب</span>
-              </a>
-
               <Link
                 href="/"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-dark-border bg-dark-bg text-gray-300 font-bold hover:text-white hover:border-primary/40 transition-all duration-200 text-xs"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-dark-border bg-dark-bg text-gray-300 font-bold hover:text-white hover:border-primary/40 transition-all duration-200 text-xs"
               >
                 <ShoppingBag className="h-4 w-4" />
                 <span>{t("continueShopping")}</span>
@@ -238,6 +287,9 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const selectedAreasList = AREAS_BY_GOVERNORATE[governorate] || AREAS_BY_GOVERNORATE.Cairo;
+  const isSelectedAreaFree = checkIsFreeArea(area);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -254,13 +306,29 @@ export default function CheckoutPage() {
           {cart.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
-              {/* Form Section */}
-              <form onSubmit={handleSubmit} className="lg:col-span-7 bg-dark-surface border border-dark-border rounded-2xl p-6 sm:p-8 space-y-6">
-                <h2 className="text-lg font-bold text-white border-b border-dark-border pb-3">
-                  {t("customerInfo")}
+              {/* Left: Customer Info Form */}
+              <div className="lg:col-span-7 bg-dark-surface border border-dark-border rounded-2xl p-6 sm:p-8 space-y-6">
+                
+                {/* Header banner clarifying free delivery areas */}
+                <div className="bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/30 p-4 rounded-xl space-y-1">
+                  <span className="text-xs font-black text-primary flex items-center gap-1.5">
+                    <span>🎉</span>
+                    <span>التوصيل مجاني للمناطق التالية:</span>
+                  </span>
+                  <p className="text-xs text-gray-200 font-bold">
+                    (مدينة نصر • التجمع • مصر الجديدة)
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    للمناطق الأخرى داخل القاهرة والجيزة، سيتم تحديد وتأكيد رسوم التوصيل معكم عبر الواتساب.
+                  </p>
+                </div>
+
+                <h2 className="text-lg font-black text-white border-b border-dark-border pb-4">
+                  {t("shippingInfo")}
                 </h2>
 
-                <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  
                   {/* Name field */}
                   <div className="space-y-1.5">
                     <label className="text-xs sm:text-sm font-semibold text-gray-300 block">
@@ -292,17 +360,19 @@ export default function CheckoutPage() {
                     {errors.phone && <p className="text-xs text-red-500 leading-relaxed">{errors.phone}</p>}
                   </div>
 
-                  {/* Governorate dropdown */}
+                  {/* Governorate dropdown (Cairo and Giza ONLY) */}
                   <div className="space-y-1.5">
                     <label className="text-xs sm:text-sm font-semibold text-gray-300 block">
                       {t("governorate")} <span className="text-primary">*</span>
                     </label>
                     <select
                       value={governorate}
-                      onChange={(e) => setGovernorate(e.target.value)}
+                      onChange={(e) => {
+                        setGovernorate(e.target.value);
+                        setArea("");
+                      }}
                       className={`w-full bg-dark-bg border ${errors.governorate ? "border-red-500" : "border-dark-border"} rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors`}
                     >
-                      <option value="">{t("selectGovernorate")}</option>
                       {GOVERNORATES.map((gov) => {
                         const label = language === "ar" ? gov.ar : gov.en;
                         return (
@@ -315,20 +385,48 @@ export default function CheckoutPage() {
                     {errors.governorate && <p className="text-xs text-red-500">{errors.governorate}</p>}
                   </div>
 
-                  {/* Area field */}
+                  {/* Area dependent dropdown */}
                   <div className="space-y-1.5">
                     <label className="text-xs sm:text-sm font-semibold text-gray-300 block">
                       {t("area")} <span className="text-primary">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={area}
                       onChange={(e) => setArea(e.target.value)}
-                      placeholder={t("areaPlaceholder")}
-                      className={`w-full bg-dark-bg border ${errors.area ? "border-red-500" : "border-dark-border"} rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors`}
-                    />
+                      className={`w-full bg-dark-bg border ${errors.area ? "border-red-500" : "border-dark-border"} rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary transition-colors`}
+                    >
+                      <option value="">-- اختر المنطقة داخل {governorate === "Cairo" ? "القاهرة" : "الجيزة"} --</option>
+                      {selectedAreasList.map((aObj) => {
+                        const label = language === "ar" ? aObj.ar : aObj.en;
+                        const freeTag = aObj.isFree ? (language === "ar" ? " (توصيل مجاني 🎉)" : " (Free Delivery 🎉)") : "";
+                        return (
+                          <option key={aObj.en} value={aObj.ar}>
+                            {label}{freeTag}
+                          </option>
+                        );
+                      })}
+                    </select>
                     {errors.area && <p className="text-xs text-red-500">{errors.area}</p>}
                   </div>
+
+                  {/* Dynamic Delivery Fee Alert Notice based on selected area */}
+                  {area && (
+                    <div className="pt-1">
+                      {isSelectedAreaFree ? (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                          <span>🎉 التوصيل مجاني لهذه المنطقة ({area})!</span>
+                        </div>
+                      ) : (
+                        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl text-xs leading-relaxed font-semibold flex items-start gap-2.5">
+                          <span className="text-base shrink-0">💬</span>
+                          <div>
+                            <strong className="block text-amber-400 font-bold mb-0.5">تنبيه رسوم التوصيل:</strong>
+                            <span>التوصيل مجاني لمناطق (مدينة نصر، التجمع، مصر الجديدة). بالنسبة لمنطقة ({area}) يتم تحديد رسوم التوصيل لاحقاً وتأكيدها معكم فور الطلب.</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Detailed Address field */}
                   <div className="space-y-1.5">
@@ -344,19 +442,19 @@ export default function CheckoutPage() {
                     />
                     {errors.address && <p className="text-xs text-red-500">{errors.address}</p>}
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-4 px-6 rounded-xl bg-primary text-dark-bg font-extrabold text-center hover:bg-primary-hover active:scale-95 disabled:opacity-50 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-                >
-                  <span>{isSubmitting ? t("submitting") : t("submitOrder")}</span>
-                  {!isSubmitting && (dir === "rtl" ? <ArrowLeft className="h-4.5 w-4.5" /> : <ArrowRight className="h-4.5 w-4.5" />)}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-4 rounded-xl bg-primary text-dark-bg font-extrabold text-sm sm:text-base hover:bg-primary-hover active:scale-98 transition-all duration-200 shadow-lg shadow-primary/25 disabled:opacity-50 mt-4"
+                  >
+                    {isSubmitting ? t("placingOrder") : t("placeOrder")}
+                  </button>
 
-              {/* Order Summary Sidebar */}
+                </form>
+              </div>
+
+              {/* Right: Order Review */}
               <div className="lg:col-span-5 bg-dark-surface border border-dark-border rounded-2xl p-6 space-y-6">
                 <h2 className="text-lg font-black text-white border-b border-dark-border pb-4">
                   {t("orderReview")}
@@ -394,7 +492,11 @@ export default function CheckoutPage() {
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-dark-text-muted">{t("deliveryFee")}</span>
                     <span className="font-bold text-white">
-                      {deliveryFee > 0 ? `${deliveryFee} ${t("currency")}` : <span className="text-green-500 font-bold">{t("deliveryFree")}</span>}
+                      {!area || isSelectedAreaFree ? (
+                        <span className="text-emerald-400 font-bold">مجانًا 🎉</span>
+                      ) : (
+                        <span className="text-amber-400 font-extrabold">سيتم التحديد لاحقاً 💬</span>
+                      )}
                     </span>
                   </div>
 
