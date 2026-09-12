@@ -72,7 +72,7 @@ export default function Home() {
           >
             {/* eslint-disable-next-html-extension/next-image-unoptimized */}
             <img
-              src="/images/logo.png"
+              src="/images/logo_v2.png"
               alt=""
               className="w-full h-full object-contain filter brightness-110"
             />

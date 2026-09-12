@@ -14,7 +14,7 @@ function buildHeaderHTML(activePage = '', basePath = '') {
       <div class="container">
         <div class="header-inner">
           <a href="${basePath}index.html" class="brand">
-            <img src="${basePath}images/logo.png" alt="Logo" class="brand-logo">
+            <img src="${basePath}images/logo_v2.png" alt="Logo" class="brand-logo">
             <div class="brand-text">
               <span class="brand-name"><span data-i18n="brandName">${i18n.t('brandName')}</span></span>
               <span class="brand-tag" data-i18n="brandTagline">${i18n.t('brandTagline')}</span>
@@ -80,7 +80,7 @@ function buildFooterHTML(basePath = '') {
         <div class="footer-top">
           <div class="footer-col">
             <div class="footer-brand-name" style="display:flex; align-items:center; gap:8px;">
-              <img src="${basePath}images/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+              <img src="${basePath}images/logo_v2.png" alt="Logo" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
               <span data-i18n="brandName">${i18n.t('brandName')}</span>
             </div>
             <p class="footer-about" data-i18n="footerAbout">${i18n.t('footerAbout')}</p>

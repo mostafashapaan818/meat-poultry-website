@@ -29,20 +29,18 @@ export const metadata: Metadata = {
     siteName: "ديليشس ميتس | Delicious Meats",
     images: [
       {
-        url: "https://deliciousmeats.vercel.app/images/logo.png",
+        url: "https://deliciousmeats.vercel.app/images/logo_v2.png",
         width: 800,
         height: 800,
-        alt: "Delicious Meats",
+        alt: "Delicious Meats Logo",
       },
     ],
-    locale: "ar_EG",
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "ديليشس ميتس | لحوم ودواجن فاخرة طازجة",
-    description: "المتجر الرائد لبيع قطعيات اللحوم والدواجن الفاخرة الطازجة وتوصيلها في مصر. جودة عالية ومذاق رائع.",
-    images: ["https://deliciousmeats.vercel.app/images/logo.png"],
+    description: "أجود أنواع اللحوم والدواجن الفاخرة الطازجة — جودة تثق بها لعائلتك، موصلة حتى باب منزلك.",
+    images: ["https://deliciousmeats.vercel.app/images/logo_v2.png"],
   },
 };
 

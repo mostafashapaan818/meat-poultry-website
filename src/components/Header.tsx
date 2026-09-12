@@ -38,11 +38,11 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-1.5 sm:gap-2.5">
               {!logoError ? (
                 <Image
-                  src="/images/logo.png"
+                  src="/images/logo_v2.png"
                   alt={t("brandName")}
-                  width={42}
-                  height={42}
-                  className="rounded-xl object-contain w-9 h-9 sm:w-12 sm:h-12 flex-shrink-0"
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 border border-primary/40 shadow-md"
                   onError={() => setLogoError(true)}
                   priority
                 />

@@ -80,7 +80,7 @@ export default function Footer() {
             <div className="flex items-center gap-2.5 text-xl font-bold text-white mb-3">
               {/* eslint-disable-next-html-extension/next-image-unoptimized */}
               <img
-                src="/images/logo.png"
+                src="/images/logo_v2.png"
                 alt={t("brandName")}
                 className="w-9 h-9 rounded-full object-cover border border-primary/40 flex-shrink-0"
               />
