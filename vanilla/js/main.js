@@ -98,8 +98,13 @@ function buildFooterHTML(basePath = '') {
             <h4 data-i18n="footerContact">${i18n.t('footerContact')}</h4>
             <div class="footer-contacts">
               <p>📍 <span data-i18n="footerAddress">${i18n.t('footerAddress')}</span></p>
-              <p>📞 <span data-i18n="footerPhone">${i18n.t('footerPhone')}</span></p>
-              <p>✉ <span data-i18n="footerEmail">${i18n.t('footerEmail')}</span></p>
+              <p><a href="https://wa.me/201043066133" target="_blank" style="color:#10b981;font-weight:bold;text-decoration:none;">💬 <span>01043066133 (واتساب)</span></a></p>
+              <p><a href="mailto:aelhawary557@gmail.com" style="color:var(--text-dim);text-decoration:none;">✉️ <span>aelhawary557@gmail.com</span></a></p>
+            </div>
+            <div style="margin-top:0.8rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <a href="https://www.facebook.com/people/ديليشس-ميتس/61593413048377/?rdid=V5pFPPM3yFPvPBt4&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F19RoBJBhqE%2F%3Fref%3D1" target="_blank" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:.3rem .6rem;border-radius:.5rem;font-size:.75rem;font-weight:bold;text-decoration:none;">فيسبوك</a>
+              <a href="https://www.instagram.com/delicious_meats.eg?stkn=ZHVieG1ibmM5ZXF2" target="_blank" style="background:rgba(236,72,153,0.15);color:#f472b6;border:1px solid rgba(236,72,153,0.3);padding:.3rem .6rem;border-radius:.5rem;font-size:.75rem;font-weight:bold;text-decoration:none;">إنستغرام</a>
+              <a href="https://wa.me/201043066133" target="_blank" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);padding:.3rem .6rem;border-radius:.5rem;font-size:.75rem;font-weight:bold;text-decoration:none;">واتساب</a>
             </div>
           </div>
         </div>

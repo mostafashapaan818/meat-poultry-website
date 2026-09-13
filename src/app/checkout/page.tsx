@@ -353,7 +353,7 @@ export default function CheckoutPage() {
       whatsappText = `مرحباً، كود طلبي هو: #${lastOrderDetails.orderRef}\nاسم العميل: ${lastOrderDetails.name}\nالعنوان: ${lastOrderDetails.governorate} - ${lastOrderDetails.area}`;
     }
 
-    const whatsappUrl = `https://wa.me/201092719920?text=${encodeURIComponent(whatsappText)}`;
+    const whatsappUrl = `https://wa.me/201043066133?text=${encodeURIComponent(whatsappText)}`;
 
     return (
       <div className="flex flex-col min-h-screen">

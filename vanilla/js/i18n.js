@@ -169,12 +169,12 @@ const TRANSLATIONS = {
     cancelBtn: 'إلغاء',
 
     // Footer
-    footerAbout: 'علامة تجارية رائدة في مصر لبيع اللحوم والدواجن الفاخرة المجمدة.',
+    footerAbout: 'علامة تجارية رائدة في مصر لبيع أجود أنواع اللحوم الحمراء والدواجن الفاخرة الطازجة.',
     footerSections: 'أقسام المتجر',
     footerContact: 'تواصل معنا',
-    footerAddress: 'التجمع الخامس، القاهرة، مصر',
-    footerPhone: 'خط ساخن: 19000',
-    footerEmail: 'info@deliciousmeats.me',
+    footerAddress: 'القاهرة والجيزة، مصر',
+    footerPhone: 'واتساب والدعم: 01043066133',
+    footerEmail: 'aelhawary557@gmail.com',
     footerCopy: 'جميع الحقوق محفوظة',
   },
 
@@ -328,12 +328,12 @@ const TRANSLATIONS = {
     saveBtn: 'Save',
     cancelBtn: 'Cancel',
 
-    footerAbout: 'Egypt\'s leading brand for premium frozen meat and poultry — quality you can trust.',
+    footerAbout: 'Egypt\'s leading brand for fresh premium selected meat and poultry.',
     footerSections: 'Store Sections',
     footerContact: 'Contact Us',
-    footerAddress: 'Fifth Settlement, Cairo, Egypt',
-    footerPhone: 'Hotline: 19000',
-    footerEmail: 'info@deliciousmeats.me',
+    footerAddress: 'Cairo & Giza, Egypt',
+    footerPhone: 'WhatsApp Support: +201043066133',
+    footerEmail: 'aelhawary557@gmail.com',
     footerCopy: 'All rights reserved',
   }
 };
