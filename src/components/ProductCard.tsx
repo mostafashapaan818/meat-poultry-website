@@ -15,11 +15,29 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [selectedWeight, setSelectedWeight] = useState<"1kg" | "0.5kg">("1kg");
+
+  const isMeatCategory = product.category === "meats";
+  const currentPrice = isMeatCategory && selectedWeight === "0.5kg" ? Math.round(product.price / 2) : product.price;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, 1);
+
+    if (isMeatCategory && selectedWeight === "0.5kg") {
+      const halfItem: Product = {
+        ...product,
+        id: `${product.id}_05kg`,
+        nameAr: `${product.nameAr} (نصف كجم)`,
+        nameEn: `${product.nameEn} (0.5 kg)`,
+        price: Math.round(product.price / 2),
+        weight: language === "ar" ? "نصف كجم" : "0.5 kg"
+      };
+      addToCart(halfItem, 1);
+    } else {
+      addToCart(product, 1);
+    }
+
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -37,6 +55,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     poultry: "from-amber-950/30 via-yellow-950/20 to-neutral-950",
     other: "from-orange-950/30 via-stone-900/20 to-neutral-950"
   };
+
+  const displayWeightTag = isMeatCategory
+    ? selectedWeight === "0.5kg"
+      ? language === "ar" ? "نصف كجم" : "0.5 kg"
+      : language === "ar" ? "1 كجم" : "1 kg"
+    : product.weight || "1 kg";
 
   return (
     <div className="group flex flex-col justify-between bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300 shadow-xl hover:shadow-2xl">
@@ -66,8 +90,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Weight Tag */}
         <div className="absolute bottom-2.5 right-3 z-10">
-          <span className="text-[10px] uppercase tracking-widest text-primary font-bold bg-dark-bg/85 backdrop-blur-md px-2 py-0.5 rounded-full border border-primary/30">
-            {product.weight || "1 kg"}
+          <span className="text-[10px] uppercase tracking-widest text-primary font-bold bg-dark-bg/85 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-primary/30 shadow-md">
+            ⚖️ {displayWeightTag}
           </span>
         </div>
       </div>
@@ -81,13 +105,50 @@ export default function ProductCard({ product }: ProductCardProps) {
           <p className="text-xs sm:text-sm text-dark-text-muted mt-1.5 line-clamp-2 leading-relaxed min-h-[40px]">
             {desc}
           </p>
+
+          {/* Interactive Weight Selection Pill for Meat Products */}
+          {isMeatCategory && (
+            <div className="mt-3 p-1 bg-dark-bg/90 border border-dark-border rounded-xl flex items-center gap-1 text-xs">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedWeight("1kg");
+                }}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-extrabold text-[11px] transition-all flex items-center justify-center gap-1 ${
+                  selectedWeight === "1kg"
+                    ? "bg-primary text-dark-bg shadow-md scale-[1.02]"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <span>{language === "ar" ? "1 كجم" : "1 kg"}</span>
+                <span className="opacity-80">({product.price} ج.م)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedWeight("0.5kg");
+                }}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-extrabold text-[11px] transition-all flex items-center justify-center gap-1 ${
+                  selectedWeight === "0.5kg"
+                    ? "bg-primary text-dark-bg shadow-md scale-[1.02]"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <span>{language === "ar" ? "نصف كجم" : "0.5 kg"}</span>
+                <span className="opacity-80">({Math.round(product.price / 2)} ج.م)</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Price & Add to Cart */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-dark-border/60">
           <div className="flex flex-col">
             <span className="text-lg sm:text-xl font-extrabold text-white">
-              {product.price}
+              {currentPrice}
               <span className="text-xs sm:text-sm font-medium text-primary ml-1 mr-1">
                 {t("currency")}
               </span>

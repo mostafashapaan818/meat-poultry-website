@@ -279,9 +279,15 @@ export async function POST(req: Request) {
     // 3. Server-Side Price & Minimum Order Limit Validation (600 EGP)
     let verifiedSubtotal = 0;
     const validatedItems = (newOrder.items || []).map((item) => {
-      // Find trusted product in server catalog
-      const matchedProd = mockProducts.find((p) => p.id === item.id);
-      const trustedUnitPrice = matchedProd ? matchedProd.price : (item.price || 0);
+      const isHalfKg = item.id.endsWith("_05kg");
+      const baseId = isHalfKg ? item.id.replace("_05kg", "") : item.id;
+      const matchedProd = mockProducts.find((p) => p.id === item.id || p.id === baseId);
+      
+      let trustedUnitPrice = matchedProd ? matchedProd.price : (item.price || 0);
+      if (isHalfKg && matchedProd) {
+        trustedUnitPrice = Math.round(matchedProd.price / 2);
+      }
+
       const qty = Math.max(1, Number(item.quantity || 1));
       const lineTotal = trustedUnitPrice * qty;
       verifiedSubtotal += lineTotal;

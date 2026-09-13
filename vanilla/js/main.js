@@ -152,10 +152,25 @@ function buildProductCard(product) {
   const name  = lang === 'ar' ? product.name_ar  : product.name_en;
   const desc  = lang === 'ar' ? product.desc_ar  : product.desc_en;
   const icon  = product.category === 'meats' ? '🥩' : product.category === 'poultry' ? '🍗' : '🔥';
+  const isMeat = product.category === 'meats';
 
   const frozenBadge = `<span class="badge badge-frozen">${i18n.t('frozenBadge')}</span>`;
   const bestBadge   = product.is_bestseller
     ? `<span class="badge badge-best">${i18n.t('bestsellerBadge')}</span>` : '';
+
+  let selectedWeight = '1kg';
+  const halfPrice = Math.round(product.price / 2);
+
+  const weightSelectorHTML = isMeat ? `
+    <div class="weight-selector-pills" style="display:flex; gap:6px; margin:8px 0; background:rgba(0,0,0,0.3); padding:4px; border-radius:10px; border:1px solid var(--border);">
+      <button type="button" class="w-pill active" data-w="1kg" style="flex:1; padding:4px 6px; font-size:11px; font-weight:bold; border-radius:6px; border:none; background:var(--primary); color:#000; cursor:pointer;">
+        ${lang === 'ar' ? '1 كجم' : '1 kg'} (${product.price} ج.م)
+      </button>
+      <button type="button" class="w-pill" data-w="0.5kg" style="flex:1; padding:4px 6px; font-size:11px; font-weight:bold; border-radius:6px; border:none; background:transparent; color:#888; cursor:pointer;">
+        ${lang === 'ar' ? 'نصف كجم' : '0.5 kg'} (${halfPrice} ج.م)
+      </button>
+    </div>
+  ` : `<div class="product-weight">⚖ ${product.weight}</div>`;
 
   const card = document.createElement('div');
   card.className = 'product-card';
@@ -167,10 +182,10 @@ function buildProductCard(product) {
     <div class="product-body">
       <div class="product-name">${name}</div>
       <div class="product-desc">${desc}</div>
-      <div class="product-weight">⚖ ${product.weight}</div>
+      ${weightSelectorHTML}
       <div class="product-footer">
         <div class="product-price">
-          ${product.price}<span class="currency"> ${i18n.t('egp')}</span>
+          <span class="price-val">${product.price}</span><span class="currency"> ${i18n.t('egp')}</span>
         </div>
         <button class="atc-btn" data-id="${product.id}" aria-label="${i18n.t('addToCart')}">
           + <span>${i18n.t('addToCart')}</span>
@@ -178,12 +193,49 @@ function buildProductCard(product) {
       </div>
     </div>`;
 
+  // Weight toggle handler for meats
+  if (isMeat) {
+    const pills = card.querySelectorAll('.w-pill');
+    const priceVal = card.querySelector('.price-val');
+    pills.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        pills.forEach(p => {
+          p.style.background = 'transparent';
+          p.style.color = '#888';
+          p.classList.remove('active');
+        });
+        this.style.background = 'var(--primary)';
+        this.style.color = '#000';
+        this.classList.add('active');
+        selectedWeight = this.getAttribute('data-w');
+        if (selectedWeight === '0.5kg') {
+          priceVal.textContent = halfPrice;
+        } else {
+          priceVal.textContent = product.price;
+        }
+      });
+    });
+  }
+
   // Add-to-cart handler
   card.querySelector('.atc-btn').addEventListener('click', function () {
-    Cart.addItem(product);
+    let itemToAdd = product;
+    if (isMeat && selectedWeight === '0.5kg') {
+      itemToAdd = {
+        ...product,
+        id: `${product.id}_05kg`,
+        name_ar: `${product.name_ar} (نصف كجم)`,
+        name_en: `${product.name_en} (0.5 kg)`,
+        price: halfPrice,
+        weight: 'نصف كجم'
+      };
+    }
+
+    Cart.addItem(itemToAdd);
     this.classList.add('added');
     this.querySelector('span').textContent = i18n.t('addedToCart');
-    showToast(`${name} — ${i18n.t('addedToCart')}`, 'success');
+    showToast(`${lang === 'ar' ? itemToAdd.name_ar : itemToAdd.name_en} — ${i18n.t('addedToCart')}`, 'success');
     setTimeout(() => {
       this.classList.remove('added');
       this.querySelector('span').textContent = i18n.t('addToCart');
