@@ -216,6 +216,7 @@ export default function CheckoutPage() {
   const [governorate, setGovernorate] = useState("Cairo");
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
+  const [hpWebsite, setHpWebsite] = useState("");
 
   // Validation & Submission States
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -304,6 +305,7 @@ export default function CheckoutPage() {
       governorate,
       area,
       address,
+      hp_website: hpWebsite,
       items: cart.map(item => ({
         id: item.product.id,
         nameAr: item.product.nameAr,
@@ -525,6 +527,16 @@ export default function CheckoutPage() {
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Invisible Honeypot Anti-Spam Field */}
+                  <input
+                    type="text"
+                    name="hp_website"
+                    value={hpWebsite}
+                    onChange={(e) => setHpWebsite(e.target.value)}
+                    style={{ display: "none" }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                   
                   {/* Name field */}
                   <div className="space-y-1.5">

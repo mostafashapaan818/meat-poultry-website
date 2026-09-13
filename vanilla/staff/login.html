@@ -54,8 +54,16 @@
   <script>
     // CREDENTIALS
     const VALID_CREDENTIALS = [
-      { user: 'amr elhwary', pass: 'amr9090' }
+      { user: 'amr elhwary', pass: 'amr9090' },
+      { user: 'mostafa_sales', pass: 'dm_sales2026' },
+      { user: 'chef_kitchen', pass: 'dm_kitchen2026' },
+      { user: 'delivery_admin', pass: 'dm_express2026' },
+      { user: 'staff_manager', pass: 'dm_staff8080' }
     ];
+
+    let failedAttempts = parseInt(localStorage.getItem('dm_staff_attempts') || '0', 10);
+    let lockoutUntil = parseInt(localStorage.getItem('dm_staff_lockout') || '0', 10);
+    let timerInterval = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       // Already logged in? Redirect immediately.
@@ -64,26 +72,83 @@
         return;
       }
 
+      checkLockoutStatus();
       document.getElementById('login-form').addEventListener('submit', handleLogin);
     });
 
+    function checkLockoutStatus() {
+      const alertEl = document.getElementById('login-alert');
+      const btnEl = document.getElementById('login-btn');
+
+      if (lockoutUntil && lockoutUntil > Date.now()) {
+        btnEl.disabled = true;
+        updateLockoutMsg();
+        if (!timerInterval) {
+          timerInterval = setInterval(() => {
+            if (Date.now() >= lockoutUntil) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+              lockoutUntil = 0;
+              failedAttempts = 0;
+              localStorage.removeItem('dm_staff_lockout');
+              localStorage.setItem('dm_staff_attempts', '0');
+              alertEl.textContent = '';
+              alertEl.classList.remove('error');
+              btnEl.disabled = false;
+            } else {
+              updateLockoutMsg();
+            }
+          }, 1000);
+        }
+      }
+    }
+
+    function updateLockoutMsg() {
+      const alertEl = document.getElementById('login-alert');
+      const diff = Math.max(0, lockoutUntil - Date.now());
+      const mins = Math.floor(diff / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      alertEl.textContent = `تم حظر محاولات الدخول مؤقتاً لكثرة المحاولات الخاطئة. يرجى الانتظار (${timeStr}) دقيقة.`;
+      alertEl.classList.add('error');
+    }
+
     function handleLogin(e) {
       e.preventDefault();
-      const user = document.getElementById('f-user').value.trim();
+
+      if (lockoutUntil && lockoutUntil > Date.now()) {
+        updateLockoutMsg();
+        return;
+      }
+
+      const user = document.getElementById('f-user').value.trim().toLowerCase();
       const pass = document.getElementById('f-pass').value;
       const alert = document.getElementById('login-alert');
       const btn  = document.getElementById('login-btn');
 
-      const valid = VALID_CREDENTIALS.some(c => c.user === user && c.pass === pass);
+      const valid = VALID_CREDENTIALS.some(c => c.user.toLowerCase() === user && c.pass === pass);
 
       if (valid) {
         sessionStorage.setItem('dm_staff_auth', 'true');
+        localStorage.removeItem('dm_staff_lockout');
+        localStorage.setItem('dm_staff_attempts', '0');
         btn.textContent = '...';
         btn.disabled = true;
         setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
       } else {
-        alert.textContent = i18n.t('loginError');
-        alert.classList.add('error');
+        failedAttempts++;
+        localStorage.setItem('dm_staff_attempts', failedAttempts.toString());
+
+        if (failedAttempts >= 5) {
+          lockoutUntil = Date.now() + 15 * 60 * 1000; // 15 mins
+          localStorage.setItem('dm_staff_lockout', lockoutUntil.toString());
+          checkLockoutStatus();
+        } else {
+          const remaining = 5 - failedAttempts;
+          alert.textContent = `${i18n.t('loginError')} (متبقي ${remaining} محاولات قبل الحظر)`;
+          alert.classList.add('error');
+        }
+
         // Shake animation on card
         document.querySelector('.auth-card').animate(
           [{ transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],

@@ -173,11 +173,14 @@ const INITIAL_ORDERS: MockOrder[] = [
 export default function AdminDashboard() {
   const { t, language, dir } = useLanguage();
   
-  // Auth states
+  // Auth states & Rate Limiting (5 attempts max / 15 min lockout)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [lockoutTimerText, setLockoutTimerText] = useState("");
 
   // Dashboard states
   const [activeTab, setActiveTab] = useState<"orders" | "products" | "recipes">("orders");
@@ -326,10 +329,17 @@ export default function AdminDashboard() {
     window.addEventListener("touchstart", handleUserInteraction, { passive: true });
     window.addEventListener("click", handleUserInteraction, { passive: true });
 
-    // Auth Check
+    // Auth Check & Rate Limiter initialization
     const authStatus = localStorage.getItem("delicious_meats_admin_auth");
     if (authStatus === "true") {
       setIsLoggedIn(true);
+    }
+
+    const savedAttempts = parseInt(localStorage.getItem("dm_login_attempts") || "0", 10);
+    const savedLockout = parseInt(localStorage.getItem("dm_login_lockout") || "0", 10);
+    if (!isNaN(savedAttempts)) setFailedAttempts(savedAttempts);
+    if (!isNaN(savedLockout) && savedLockout > Date.now()) {
+      setLockoutUntil(savedLockout);
     }
 
     // Load Orders from server
@@ -369,9 +379,44 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // Handle Login with 5 authorized accounts
+  // Lockout Countdown Timer Effect
+  useEffect(() => {
+    if (!lockoutUntil) return;
+
+    const updateTimer = () => {
+      const diff = lockoutUntil - Date.now();
+      if (diff <= 0) {
+        setLockoutUntil(null);
+        setFailedAttempts(0);
+        setLockoutTimerText("");
+        localStorage.removeItem("dm_login_lockout");
+        localStorage.setItem("dm_login_attempts", "0");
+        return;
+      }
+      const mins = Math.floor(diff / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      setLockoutTimerText(`${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
+
+  // Handle Login with 5 authorized accounts & Rate Limiter
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check active lockout
+    if (lockoutUntil && lockoutUntil > Date.now()) {
+      setLoginError(
+        language === "ar"
+          ? `تم حظر محاولات الدخول مؤقتاً لكثرة المحاولات الخاطئة. يرجى الانتظار (${lockoutTimerText}) دقيقة.`
+          : `Account locked due to multiple failed login attempts. Retry in (${lockoutTimerText}).`
+      );
+      return;
+    }
+
     const enteredUser = usernameInput.trim().toLowerCase();
     const enteredPass = passwordInput.trim();
 
@@ -390,10 +435,34 @@ export default function AdminDashboard() {
     if (isValid) {
       setIsLoggedIn(true);
       setLoginError("");
+      setFailedAttempts(0);
+      setLockoutUntil(null);
       localStorage.setItem("delicious_meats_admin_auth", "true");
+      localStorage.removeItem("dm_login_lockout");
+      localStorage.setItem("dm_login_attempts", "0");
       fetchLiveOrders();
     } else {
-      setLoginError(t("loginError"));
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      localStorage.setItem("dm_login_attempts", newAttempts.toString());
+
+      if (newAttempts >= 5) {
+        const lockoutTime = Date.now() + 15 * 60 * 1000; // 15 mins
+        setLockoutUntil(lockoutTime);
+        localStorage.setItem("dm_login_lockout", lockoutTime.toString());
+        setLoginError(
+          language === "ar"
+            ? "تم حظر محاولات تسجيل الدخول مؤقتاً لمدة 15 دقيقة لتجاوز 5 محاولات خاطئة."
+            : "Too many failed login attempts. Portal locked for 15 minutes."
+        );
+      } else {
+        const remaining = 5 - newAttempts;
+        setLoginError(
+          language === "ar"
+            ? `${t("loginError")} (متبقي ${remaining} محاولات قبل الحظر المؤقت)`
+            : `${t("loginError")} (${remaining} attempts remaining before temporary lockout)`
+        );
+      }
     }
   };
 

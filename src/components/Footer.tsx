@@ -213,11 +213,6 @@ export default function Footer() {
           <div>
             © {year} {t("brandName")}. {language === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </div>
-          <div className="flex gap-4">
-            <Link href="/admin" className="hover:text-primary underline transition-colors">
-              {t("adminLink")}
-            </Link>
-          </div>
         </div>
 
       </div>

@@ -50,7 +50,7 @@ function buildHeaderHTML(activePage = '', basePath = '') {
         <a href="${basePath}category.html?cat=meats"   class="${activePage === 'meats'   ? 'active' : ''}" data-i18n="navMeats">${i18n.t('navMeats')}</a>
         <a href="${basePath}category.html?cat=poultry" class="${activePage === 'poultry' ? 'active' : ''}" data-i18n="navPoultry">${i18n.t('navPoultry')}</a>
         <a href="${basePath}category.html?cat=other"   class="${activePage === 'other'   ? 'active' : ''}" data-i18n="navOther">${i18n.t('navOther')}</a>
-        <a href="${basePath}staff/login.html" data-i18n="navStaff">${i18n.t('navStaff')}</a>
+        <a href="${basePath}track-order.html"          class="${activePage === 'track'   ? 'active' : ''}">🔍 تتبع الطلب</a>
       </nav>
     </header>`;
 }
@@ -91,7 +91,7 @@ function buildFooterHTML(basePath = '') {
               <a href="${basePath}category.html?cat=meats"   data-i18n="navMeats">${i18n.t('navMeats')}</a>
               <a href="${basePath}category.html?cat=poultry" data-i18n="navPoultry">${i18n.t('navPoultry')}</a>
               <a href="${basePath}category.html?cat=other"   data-i18n="navOther">${i18n.t('navOther')}</a>
-              <a href="${basePath}staff/login.html"          data-i18n="navStaff">${i18n.t('navStaff')}</a>
+              <a href="${basePath}track-order.html"          style="color:var(--primary); font-weight:bold;">🔍 تتبع الطلب</a>
             </div>
           </div>
           <div class="footer-col">
@@ -110,7 +110,6 @@ function buildFooterHTML(basePath = '') {
         </div>
         <div class="footer-bottom">
           <span>© ${year} <span data-i18n="brandName">${i18n.t('brandName')}</span>. <span data-i18n="footerCopy">${i18n.t('footerCopy')}</span>.</span>
-          <a href="${basePath}staff/login.html" style="color:var(--text-dim); text-decoration:underline;" data-i18n="navStaff">${i18n.t('navStaff')}</a>
         </div>
       </div>
     </footer>`;

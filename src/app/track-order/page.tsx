@@ -249,31 +249,60 @@ function OrderStatusPipeline({ status, language }: { status: Order["status"]; la
   );
 }
 
+// Sensitive Data Masking Helpers for Privacy
+function maskPhoneNumber(phoneStr: string): string {
+  if (!phoneStr) return "";
+  const cleaned = phoneStr.trim();
+  if (cleaned.length >= 8) {
+    return cleaned.slice(0, 3) + "*****" + cleaned.slice(-3);
+  }
+  return cleaned;
+}
+
+function maskStreetAddress(addressStr: string): string {
+  if (!addressStr) return "";
+  return addressStr.length > 10 ? addressStr.slice(0, 8) + "..." : addressStr;
+}
+
 export default function TrackOrderPage() {
   const { t, language, dir } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [orderIdQuery, setOrderIdQuery] = useState("");
+  const [phoneQuery, setPhoneQuery] = useState("");
+  const [searchError, setSearchError] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [foundOrders, setFoundOrders] = useState<Order[] | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Auto search query from URL parameter if available (?q=DM-123456 or ?id=DM-123456 or ?phone=010...)
+  // Auto search query from URL parameter if available (?id=DM-123456&phone=010...)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      const queryParam = urlParams.get("query") || urlParams.get("q") || urlParams.get("id") || urlParams.get("phone");
-      if (queryParam) {
-        setSearchQuery(queryParam);
-        executeSearch(queryParam);
+      const idParam = urlParams.get("id") || urlParams.get("q") || urlParams.get("query") || "";
+      const phoneParam = urlParams.get("phone") || "";
+      if (idParam) setOrderIdQuery(idParam);
+      if (phoneParam) setPhoneQuery(phoneParam);
+      if (idParam && phoneParam) {
+        executeSearch(idParam, phoneParam);
       }
     }
   }, []);
 
-  const executeSearch = async (queryStr: string) => {
-    const cleanQuery = queryStr.trim().toLowerCase();
-    if (!cleanQuery) return;
+  const executeSearch = async (targetId: string, targetPhone: string) => {
+    const cleanId = targetId.trim().toLowerCase().replace("#", "");
+    const cleanPhone = targetPhone.trim().replaceAll(" ", "");
+
+    if (!cleanId || !cleanPhone) {
+      setSearchError(
+        language === "ar"
+          ? "يرجى إدخال كل من رقم الطلب ورقم الهاتف المسجل لحماية خصوصية الطلب."
+          : "Please enter both Order ID and Phone Number for privacy verification."
+      );
+      return;
+    }
 
     setIsSearching(true);
     setHasSearched(true);
+    setSearchError("");
     setFoundOrders(null);
 
     let allOrders: Order[] = [];
@@ -305,20 +334,34 @@ export default function TrackOrderPage() {
       }
     } catch (e) {}
 
-    // Filter matching order ID or Phone number
-    const matched = allOrders.filter((order) => {
-      const idMatch = order.id.toLowerCase().includes(cleanQuery) || cleanQuery.includes(order.id.toLowerCase().replace("#", ""));
-      const phoneMatch = order.phone.replaceAll(" ", "").includes(cleanQuery.replaceAll(" ", ""));
-      return idMatch || phoneMatch;
+    // Verify both Order ID and Customer Phone Match
+    const matchedOrders = allOrders.filter((order) => {
+      const idMatch = order.id.toLowerCase().replace("#", "").includes(cleanId) || cleanId.includes(order.id.toLowerCase().replace("#", ""));
+      const phoneMatch = order.phone.replaceAll(" ", "").includes(cleanPhone) || cleanPhone.includes(order.phone.replaceAll(" ", ""));
+      return idMatch && phoneMatch;
     });
 
-    setFoundOrders(matched);
+    if (matchedOrders.length === 0) {
+      // Check if order exists but phone didn't match
+      const idOnlyMatch = allOrders.some((order) =>
+        order.id.toLowerCase().replace("#", "").includes(cleanId)
+      );
+      if (idOnlyMatch) {
+        setSearchError(
+          language === "ar"
+            ? "رقم الهاتف المدخل لا يطابق رقم الهاتف المسجل لهذا الطلب. يرجى التأكد من البيانات لحماية الخصوصية."
+            : "The phone number entered does not match the registered phone for this order ID."
+        );
+      }
+    }
+
+    setFoundOrders(matchedOrders);
     setIsSearching(false);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    executeSearch(searchQuery);
+    executeSearch(orderIdQuery, phoneQuery);
   };
 
   return (
@@ -332,44 +375,68 @@ export default function TrackOrderPage() {
           <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-xs font-bold text-primary mb-3">
               <Search className="h-4 w-4" />
-              <span>{language === "ar" ? "خدمة العملاء ومتابعة الشحنات" : "Order Tracking & Customer Support"}</span>
+              <span>{language === "ar" ? "خدمة العملاء ومتابعة الشحنات الأكيد" : "Order Tracking & Privacy Support"}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               {language === "ar" ? "تتبع حالة طلبك التفاعلية 🚚" : "Live Interactive Order Tracking"}
             </h1>
             <p className="text-xs sm:text-sm text-dark-text-muted mt-2 leading-relaxed">
               {language === "ar"
-                ? "أدخل رقم الهاتف المسجل بالطلب أو كود الطلب المرجعي لمتابعة حالة التوصيل والعد التنازلي المباشر."
-                : "Enter your phone number or order reference code to track live progress and countdown."}
+                ? "لحماية خصوصيتك، يرجى أدخال كود الطلب ورقم الهاتف المسجل للتأكد من هويتك ومتابعة حالة التوصيل."
+                : "For customer privacy, enter both your Order ID and registered phone number to verify identity."}
             </p>
           </div>
 
-          {/* Search Input Box */}
+          {/* Secure Dual Input Search Box */}
           <form
             onSubmit={handleSearchSubmit}
-            className="bg-dark-surface border border-dark-border rounded-2xl p-3 sm:p-4 shadow-2xl flex flex-col sm:flex-row gap-3 mb-12"
+            className="bg-dark-surface border border-dark-border rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 mb-12"
           >
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={
-                  language === "ar"
-                    ? "أدخل رقم التلفون (مثال: 01012345678) أو كود الطلب (مثال: DM-384910)..."
-                    : "Enter phone number or order reference code..."
-                }
-                className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
-              />
+            {searchError && (
+              <div className="p-3.5 bg-amber-500/15 border border-amber-500/30 rounded-xl text-xs text-amber-400 font-bold flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{searchError}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-300 block">
+                  {language === "ar" ? "رقم مرجع الطلب (Order ID) *" : "Order ID Code *"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={orderIdQuery}
+                  onChange={(e) => setOrderIdQuery(e.target.value)}
+                  placeholder={language === "ar" ? "مثال: DM-384910" : "Example: DM-384910"}
+                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-300 block">
+                  {language === "ar" ? "رقم الهاتف المسجل بالطلب *" : "Registered Phone Number *"}
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={phoneQuery}
+                  onChange={(e) => setPhoneQuery(e.target.value)}
+                  placeholder={language === "ar" ? "مثال: 01012345678" : "Example: 01012345678"}
+                  dir="ltr"
+                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
             </div>
             
             <button
               type="submit"
-              disabled={isSearching || !searchQuery.trim()}
-              className="px-8 py-3.5 rounded-xl bg-primary text-dark-bg font-extrabold text-sm hover:bg-primary-hover active:scale-95 disabled:opacity-50 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 flex-shrink-0"
+              disabled={isSearching || !orderIdQuery.trim() || !phoneQuery.trim()}
+              className="w-full py-3.5 rounded-xl bg-primary text-dark-bg font-extrabold text-sm hover:bg-primary-hover active:scale-95 disabled:opacity-50 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
             >
               <Search className="h-4 w-4 stroke-[3]" />
-              <span>{isSearching ? t("loading") : (language === "ar" ? "تتبع الطلب الآن" : "Track Order")}</span>
+              <span>{isSearching ? t("loading") : (language === "ar" ? "تأكيد وتتبع حالة الطلب" : "Verify & Track Order")}</span>
             </button>
           </form>
 
@@ -477,7 +544,7 @@ export default function TrackOrderPage() {
                           <p className="text-white font-bold">{order.customerName}</p>
                           <div className="flex items-center gap-1.5 text-primary font-medium">
                             <Phone className="h-3.5 w-3.5" />
-                            <span dir="ltr">{order.phone}</span>
+                            <span dir="ltr">{maskPhoneNumber(order.phone)}</span>
                           </div>
                         </div>
 
@@ -488,7 +555,7 @@ export default function TrackOrderPage() {
                           <div className="flex items-start gap-1.5 text-gray-300">
                             <MapPin className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                             <span>
-                              {order.governorate}, {order.area}, {order.address}
+                              {order.governorate}, {order.area} ({maskStreetAddress(order.address)})
                             </span>
                           </div>
                         </div>

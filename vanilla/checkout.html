@@ -43,6 +43,8 @@
               <h2 data-i18n="checkoutSubtitle">بيانات الشحن والتوصيل</h2>
 
               <form id="checkout-form" novalidate>
+                <!-- Invisible Honeypot Anti-Spam Field -->
+                <input id="f-hp" type="text" style="display:none;" tabindex="-1" autocomplete="off">
 
                 <div class="form-group">
                   <label class="form-label" for="f-name">
@@ -437,6 +439,8 @@
       const phoneVal = document.getElementById('f-phone').value.trim();
       const isFree = checkIsFreeArea(areaVal);
 
+      const hpVal = document.getElementById('f-hp') ? document.getElementById('f-hp').value : '';
+
       const order  = {
         id: ref,
         customer_name:   custName,
@@ -444,6 +448,7 @@
         governorate:     govVal,
         area:            areaVal,
         address_details: addressVal,
+        hp_website:      hpVal,
         items: items.map(i => ({
           product_id: i.id,
           name_ar: i.name_ar, name_en: i.name_en,

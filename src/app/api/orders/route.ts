@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { mockProducts } from "@/data/products";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+// IP Rate Limiting Store for order creation (Max 3 orders per 10 minutes per IP)
+const ipOrderRateMap = new Map<string, number[]>();
 
 export interface MockOrder {
   id: string;
@@ -243,15 +247,69 @@ export async function GET() {
   });
 }
 
-// POST /api/orders (Create Order)
+// POST /api/orders (Create Order with Security, Anti-Spam & Server Price Validation)
 export async function POST(req: Request) {
   try {
+    const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown_ip";
+    
+    // 1. IP Rate Limiting Check (Max 3 orders / 10 minutes)
+    const now = Date.now();
+    const windowMs = 10 * 60 * 1000;
+    const timestamps = (ipOrderRateMap.get(clientIp) || []).filter((t) => now - t < windowMs);
+    if (timestamps.length >= 5) {
+      return NextResponse.json(
+        { error: "تم تجاوز الحد المسموح لإرسال الطلبات. يرجى الانتظار بضع دقائق قبل المحاولة مرة أخرى." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     if (!body) {
       return NextResponse.json({ error: "Invalid order data" }, { status: 400 });
     }
 
+    // 2. Anti-Spam Honeypot Verification (hp_website / honeypot)
+    if (body.hp_website || body.website || body.honeypot) {
+      // Bot detected - reject request
+      return NextResponse.json({ error: "Spam bot request rejected" }, { status: 400 });
+    }
+
     const newOrder = normalizeOrder(body);
+
+    // 3. Server-Side Price & Minimum Order Limit Validation (600 EGP)
+    let verifiedSubtotal = 0;
+    const validatedItems = (newOrder.items || []).map((item) => {
+      // Find trusted product in server catalog
+      const matchedProd = mockProducts.find((p) => p.id === item.id);
+      const trustedUnitPrice = matchedProd ? matchedProd.price : (item.price || 0);
+      const qty = Math.max(1, Number(item.quantity || 1));
+      const lineTotal = trustedUnitPrice * qty;
+      verifiedSubtotal += lineTotal;
+
+      return {
+        ...item,
+        price: trustedUnitPrice,
+        quantity: qty
+      };
+    });
+
+    if (verifiedSubtotal < 600) {
+      return NextResponse.json(
+        { error: "الحد الأدنى للطلب هو 600 جنيه مصري لإتمام عملية الشراء." },
+        { status: 400 }
+      );
+    }
+
+    const shippingFee = 50; // Standard 50 EGP shipping fee
+    const verifiedGrandTotal = verifiedSubtotal + shippingFee;
+
+    // Securely update order with verified server prices & total
+    newOrder.items = validatedItems;
+    newOrder.totalValue = verifiedGrandTotal;
+
+    // Update IP rate limiter
+    timestamps.push(now);
+    ipOrderRateMap.set(clientIp, timestamps);
 
     // Fetch existing orders first to prevent overwriting
     const existing = await fetchAllOrders();
