@@ -421,11 +421,11 @@ export default function AdminDashboard() {
     const enteredPass = passwordInput.trim();
 
     const AUTHORIZED_STAFF = [
-      { username: "amr elhwary", password: "amr9090" },
-      { username: "mostafa_sales", password: "dm_sales2026" },
-      { username: "chef_kitchen", password: "dm_kitchen2026" },
-      { username: "delivery_admin", password: "dm_express2026" },
-      { username: "staff_manager", password: "dm_staff8080" },
+      { username: "amr elhwary", password: "1009" },
+      { username: "mostafa_sales", password: "1009" },
+      { username: "chef_kitchen", password: "1009" },
+      { username: "delivery_admin", password: "1009" },
+      { username: "staff_manager", password: "1009" },
     ];
 
     const isValid = AUTHORIZED_STAFF.some(
